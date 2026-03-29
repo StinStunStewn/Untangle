@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Untangle</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&family=Nunito+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f12;
+    --surface: #18181f;
+    --surface-raised: #21212b;
+    --surface-high: #2a2a38;
+    --border: rgba(255,255,255,0.07);
+    --border-active: rgba(255,255,255,0.16);
+    --text-primary: #eeeef2;
+    --text-secondary: #8888a0;
+    --text-muted: #55556a;
+    --accent: #a78bfa;
+    --accent-soft: rgba(167,139,250,0.12);
+    --accent-glow: rgba(167,139,250,0.25);
+    --success: #6ee7b7;
+    --warning: #fbbf24;
+    --danger: #f87171;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --radius-xs: 6px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    --shadow-lg: 0 8px 48px rgba(0,0,0,0.6);
+    --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+[data-theme=“light”] {
+–bg: #f4f4f8;
+–surface: #ffffff;
+–surface-raised: #f0f0f5;
+–surface-high: #e8e8f0;
+–border: rgba(0,0,0,0.07);
+–border-active: rgba(0,0,0,0.16);
+–text-primary: #18181f;
+–text-secondary: #55556a;
+–text-muted: #9999b0;
+–accent: #7c5ce0;
+–accent-soft: rgba(124,92,224,0.08);
+–accent-glow: rgba(124,92,224,0.2);
+–shadow: 0 4px 24px rgba(0,0,0,0.08);
+–shadow-lg: 0 8px 48px rgba(0,0,0,0.14);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+font-family: ‘Nunito Sans’, sans-serif;
+background: var(–bg);
+color: var(–text-primary);
+min-height: 100vh;
+line-height: 1.6;
+transition: background var(–transition), color var(–transition);
+}
+
+/* Background texture */
+body::before {
+content: ‘’;
+position: fixed;
+inset: 0;
+background: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(167,139,250,0.05) 0%, transparent 60%),
+radial-gradient(ellipse 60% 80% at 80% 90%, rgba(110,231,183,0.03) 0%, transparent 60%);
+pointer-events: none;
+z-index: 0;
+}
+
+.app {
+max-width: 760px;
+margin: 0 auto;
+padding: 32px 20px 80px;
+position: relative;
+z-index: 1;
+}
+
+/* Header */
+header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+margin-bottom: 48px;
+}
+
+.wordmark {
+font-family: ‘Nunito’, sans-serif;
+font-size: 22px;
+font-weight: 700;
+letter-spacing: -0.3px;
+color: var(–text-primary);
+}
+
+.wordmark span {
+color: var(–accent);
+}
+
+.header-actions {
+display: flex;
+align-items: center;
+gap: 8px;
+}
+
+.icon-btn {
+width: 38px;
+height: 38px;
+border-radius: 50%;
+background: var(–surface);
+border: 1px solid var(–border);
+color: var(–text-secondary);
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+transition: all var(–transition);
+font-size: 15px;
+}
+
+.icon-btn:hover {
+background: var(–surface-raised);
+color: var(–text-primary);
+border-color: var(–border-active);
+}
+
+/* API Key Banner */
+.api-banner {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+padding: 16px 20px;
+margin-bottom: 28px;
+display: flex;
+align-items: center;
+gap: 14px;
+animation: fadeSlideIn 0.4s ease;
+}
+
+.api-banner.hidden { display: none; }
+
+.api-banner-icon {
+width: 36px;
+height: 36px;
+border-radius: 50%;
+background: var(–accent-soft);
+color: var(–accent);
+display: flex;
+align-items: center;
+justify-content: center;
+flex-shrink: 0;
+font-size: 16px;
+}
+
+.api-banner-text { flex: 1; }
+.api-banner-text p { font-size: 13px; color: var(–text-secondary); margin-top: 2px; }
+.api-banner-label { font-size: 14px; font-weight: 600; color: var(–text-primary); }
+
+.api-input-row {
+display: flex;
+gap: 8px;
+margin-top: 10px;
+align-items: center;
+}
+
+.api-input-row input {
+flex: 1;
+background: var(–surface-raised);
+border: 1px solid var(–border);
+border-radius: var(–radius-xs);
+padding: 8px 12px;
+font-family: ‘Nunito Sans’, sans-serif;
+font-size: 13px;
+color: var(–text-primary);
+outline: none;
+transition: border-color var(–transition);
+}
+
+.api-input-row input:focus { border-color: var(–accent); }
+.api-input-row input::placeholder { color: var(–text-muted); }
+
+/* Cards */
+.card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+padding: 24px;
+margin-bottom: 16px;
+transition: border-color var(–transition);
+}
+
+.card:hover { border-color: var(–border-active); }
+
+.card-label {
+font-size: 11px;
+font-weight: 700;
+letter-spacing: 1.2px;
+text-transform: uppercase;
+color: var(–text-muted);
+margin-bottom: 16px;
+}
+
+/* Upload Zone */
+.upload-zone {
+border: 1.5px dashed var(–border-active);
+border-radius: var(–radius-sm);
+padding: 36px 24px;
+text-align: center;
+cursor: pointer;
+transition: all var(–transition);
+background: var(–surface-raised);
+position: relative;
+}
+
+.upload-zone:hover, .upload-zone.drag-over {
+border-color: var(–accent);
+background: var(–accent-soft);
+}
+
+.upload-zone input[type=“file”] {
+position: absolute;
+inset: 0;
+opacity: 0;
+cursor: pointer;
+width: 100%;
+height: 100%;
+}
+
+.upload-icon {
+width: 48px;
+height: 48px;
+margin: 0 auto 14px;
+border-radius: 50%;
+background: var(–accent-soft);
+color: var(–accent);
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 20px;
+}
+
+.upload-title {
+font-family: ‘Nunito’, sans-serif;
+font-size: 15px;
+font-weight: 600;
+color: var(–text-primary);
+margin-bottom: 6px;
+}
+
+.upload-sub {
+font-size: 13px;
+color: var(–text-secondary);
+}
+
+/* Image Previews */
+.image-grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+gap: 10px;
+margin-top: 16px;
+}
+
+.image-thumb {
+position: relative;
+border-radius: var(–radius-sm);
+overflow: hidden;
+aspect-ratio: 1;
+background: var(–surface-raised);
+animation: fadeScaleIn 0.3s ease;
+}
+
+.image-thumb img {
+width: 100%;
+height: 100%;
+object-fit: cover;
+}
+
+.image-thumb-remove {
+position: absolute;
+top: 6px;
+right: 6px;
+width: 24px;
+height: 24px;
+border-radius: 50%;
+background: rgba(0,0,0,0.7);
+border: none;
+color: white;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 12px;
+opacity: 0;
+transition: opacity var(–transition);
+}
+
+.image-thumb:hover .image-thumb-remove { opacity: 1; }
+
+.add-more-btn {
+aspect-ratio: 1;
+border-radius: var(–radius-sm);
+border: 1.5px dashed var(–border-active);
+background: transparent;
+color: var(–text-muted);
+cursor: pointer;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+gap: 6px;
+font-size: 12px;
+font-family: ‘Nunito Sans’, sans-serif;
+transition: all var(–transition);
+position: relative;
+}
+
+.add-more-btn input[type=“file”] {
+position: absolute;
+inset: 0;
+opacity: 0;
+cursor: pointer;
+width: 100%;
+height: 100%;
+}
+
+.add-more-btn:hover {
+border-color: var(–accent);
+color: var(–accent);
+}
+
+/* Settings Grid */
+.settings-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 14px;
+}
+
+.field {
+display: flex;
+flex-direction: column;
+gap: 8px;
+}
+
+.field.full { grid-column: 1 / -1; }
+
+.field-label {
+font-size: 13px;
+font-weight: 600;
+color: var(–text-secondary);
+}
+
+.field-label svg {
+margin-right: 5px;
+vertical-align: middle;
+}
+
+.input, textarea {
+background: var(–surface-raised);
+border: 1px solid var(–border);
+border-radius: var(–radius-xs);
+padding: 10px 14px;
+font-family: ‘Nunito Sans’, sans-serif;
+font-size: 14px;
+color: var(–text-primary);
+outline: none;
+transition: border-color var(–transition);
+width: 100%;
+}
+
+.input:focus, textarea:focus { border-color: var(–accent); }
+.input::placeholder, textarea::placeholder { color: var(–text-muted); }
+textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+
+select.input {
+appearance: none;
+background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘8’ viewBox=‘0 0 12 8’%3E%3Cpath d=‘M1 1l5 5 5-5’ stroke=’%238888a0’ stroke-width=‘1.5’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”);
+background-repeat: no-repeat;
+background-position: right 12px center;
+padding-right: 36px;
+cursor: pointer;
+}
+
+select.input option {
+background: var(–surface-raised);
+color: var(–text-primary);
+}
+
+/* Haze Level Selector */
+.level-selector {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+gap: 8px;
+}
+
+.level-btn {
+background: var(–surface-raised);
+border: 1.5px solid var(–border);
+border-radius: var(–radius-sm);
+padding: 10px 8px;
+text-align: center;
+cursor: pointer;
+transition: all var(–transition);
+font-family: ‘Nunito’, sans-serif;
+}
+
+.level-btn .level-name {
+font-size: 13px;
+font-weight: 700;
+color: var(–text-secondary);
+display: block;
+transition: color var(–transition);
+}
+
+.level-btn .level-desc {
+font-size: 11px;
+color: var(–text-muted);
+display: block;
+margin-top: 2px;
+transition: color var(–transition);
+}
+
+.level-btn:hover {
+border-color: var(–border-active);
+}
+
+.level-btn.active {
+border-color: var(–accent);
+background: var(–accent-soft);
+}
+
+.level-btn.active .level-name { color: var(–accent); }
+.level-btn.active .level-desc { color: var(–text-secondary); }
+
+/* Time Input Row */
+.time-row {
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.time-row span {
+font-size: 13px;
+color: var(–text-muted);
+white-space: nowrap;
+}
+
+/* Generate Button */
+.generate-btn {
+width: 100%;
+padding: 16px;
+border-radius: var(–radius);
+background: var(–accent);
+border: none;
+color: white;
+font-family: ‘Nunito’, sans-serif;
+font-size: 16px;
+font-weight: 700;
+cursor: pointer;
+transition: all var(–transition);
+margin-top: 8px;
+letter-spacing: 0.2px;
+position: relative;
+overflow: hidden;
+}
+
+.generate-btn::after {
+content: ‘’;
+position: absolute;
+inset: 0;
+background: rgba(255,255,255,0);
+transition: background var(–transition);
+}
+
+.generate-btn:hover::after { background: rgba(255,255,255,0.08); }
+.generate-btn:active::after { background: rgba(0,0,0,0.08); }
+
+.generate-btn:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+}
+
+.generate-btn .btn-inner {
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 10px;
+}
+
+/* Loading */
+.spinner {
+width: 18px;
+height: 18px;
+border: 2px solid rgba(255,255,255,0.3);
+border-top-color: white;
+border-radius: 50%;
+animation: spin 0.7s linear infinite;
+}
+
+/* Results */
+.results-card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+padding: 28px;
+margin-top: 20px;
+animation: fadeSlideIn 0.5s ease;
+}
+
+.results-header {
+display: flex;
+align-items: flex-start;
+justify-content: space-between;
+margin-bottom: 24px;
+gap: 16px;
+}
+
+.results-title {
+font-family: ‘Nunito’, sans-serif;
+font-size: 20px;
+font-weight: 700;
+color: var(–text-primary);
+line-height: 1.3;
+}
+
+.results-meta {
+font-size: 13px;
+color: var(–text-secondary);
+margin-top: 4px;
+}
+
+.results-badge {
+background: var(–accent-soft);
+border: 1px solid rgba(167,139,250,0.2);
+border-radius: 20px;
+padding: 4px 12px;
+font-size: 12px;
+font-weight: 600;
+color: var(–accent);
+white-space: nowrap;
+}
+
+.task-list {
+display: flex;
+flex-direction: column;
+gap: 10px;
+}
+
+.task-item {
+display: flex;
+align-items: flex-start;
+gap: 14px;
+padding: 14px 16px;
+background: var(–surface-raised);
+border-radius: var(–radius-sm);
+border: 1px solid var(–border);
+cursor: pointer;
+transition: all var(–transition);
+animation: fadeSlideIn 0.4s ease both;
+}
+
+.task-item:hover { border-color: var(–border-active); }
+
+.task-item.done {
+opacity: 0.5;
+background: var(–surface);
+}
+
+.task-item.done .task-text { text-decoration: line-through; color: var(–text-muted); }
+
+.task-check {
+width: 22px;
+height: 22px;
+border-radius: 50%;
+border: 1.5px solid var(–border-active);
+flex-shrink: 0;
+display: flex;
+align-items: center;
+justify-content: center;
+transition: all var(–transition);
+margin-top: 1px;
+color: transparent;
+font-size: 11px;
+}
+
+.task-item.done .task-check {
+background: var(–accent);
+border-color: var(–accent);
+color: white;
+}
+
+.task-content { flex: 1; }
+
+.task-text {
+font-size: 14px;
+color: var(–text-primary);
+font-weight: 500;
+line-height: 1.5;
+}
+
+.task-note {
+font-size: 12px;
+color: var(–text-secondary);
+margin-top: 3px;
+font-style: italic;
+}
+
+.task-duration {
+font-size: 12px;
+color: var(–text-muted);
+font-weight: 600;
+white-space: nowrap;
+margin-top: 2px;
+}
+
+.section-header {
+font-size: 11px;
+font-weight: 700;
+letter-spacing: 1px;
+text-transform: uppercase;
+color: var(–text-muted);
+padding: 16px 0 8px;
+display: flex;
+align-items: center;
+gap: 8px;
+}
+
+.section-header::after {
+content: ‘’;
+flex: 1;
+height: 1px;
+background: var(–border);
+}
+
+.progress-bar-wrap {
+background: var(–surface-raised);
+border-radius: 99px;
+height: 4px;
+margin-bottom: 20px;
+overflow: hidden;
+}
+
+.progress-bar-fill {
+height: 100%;
+background: var(–accent);
+border-radius: 99px;
+transition: width 0.4s ease;
+}
+
+.reset-btn {
+margin-top: 20px;
+width: 100%;
+padding: 12px;
+border-radius: var(–radius-sm);
+background: transparent;
+border: 1px solid var(–border);
+color: var(–text-secondary);
+font-family: ‘Nunito’, sans-serif;
+font-size: 14px;
+font-weight: 600;
+cursor: pointer;
+transition: all var(–transition);
+}
+
+.reset-btn:hover {
+background: var(–surface-raised);
+color: var(–text-primary);
+border-color: var(–border-active);
+}
+
+/* Error */
+.error-msg {
+background: rgba(248,113,113,0.08);
+border: 1px solid rgba(248,113,113,0.2);
+border-radius: var(–radius-sm);
+padding: 14px 16px;
+font-size: 13px;
+color: var(–danger);
+margin-top: 12px;
+display: none;
+}
+
+.error-msg.visible { display: block; }
+
+/* Settings Modal */
+.modal-overlay {
+position: fixed;
+inset: 0;
+background: rgba(0,0,0,0.6);
+backdrop-filter: blur(4px);
+z-index: 100;
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 20px;
+opacity: 0;
+pointer-events: none;
+transition: opacity var(–transition);
+}
+
+.modal-overlay.open {
+opacity: 1;
+pointer-events: all;
+}
+
+.modal {
+background: var(–surface);
+border: 1px solid var(–border-active);
+border-radius: var(–radius);
+padding: 28px;
+width: 100%;
+max-width: 440px;
+transform: translateY(10px);
+transition: transform var(–transition);
+}
+
+.modal-overlay.open .modal { transform: translateY(0); }
+
+.modal-header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+margin-bottom: 20px;
+}
+
+.modal-title {
+font-family: ‘Nunito’, sans-serif;
+font-size: 18px;
+font-weight: 700;
+}
+
+.btn-sm {
+padding: 9px 18px;
+border-radius: var(–radius-xs);
+border: none;
+font-family: ‘Nunito’, sans-serif;
+font-size: 13px;
+font-weight: 700;
+cursor: pointer;
+transition: all var(–transition);
+}
+
+.btn-primary { background: var(–accent); color: white; }
+.btn-primary:hover { opacity: 0.9; }
+.btn-ghost { background: transparent; color: var(–text-secondary); border: 1px solid var(–border); }
+.btn-ghost:hover { background: var(–surface-raised); color: var(–text-primary); }
+
+/* Tooltip notice */
+.notice {
+font-size: 12px;
+color: var(–text-muted);
+margin-top: 8px;
+line-height: 1.5;
+}
+
+/* Animations */
+@keyframes fadeSlideIn {
+from { opacity: 0; transform: translateY(12px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeScaleIn {
+from { opacity: 0; transform: scale(0.92); }
+to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes spin {
+to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 540px) {
+.settings-grid { grid-template-columns: 1fr; }
+.field.full { grid-column: 1; }
+.level-selector { grid-template-columns: repeat(2, 1fr); }
+.time-row { flex-wrap: wrap; }
+}
+</style>
+
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <div class="wordmark">un<span>tangle</span></div>
+    <div class="header-actions">
+      <button class="icon-btn" id="themeToggle" title="Toggle theme" aria-label="Toggle theme">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="settingsBtn" title="Settings" aria-label="Settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- API Key Banner -->
+
+  <div class="api-banner" id="apiBanner">
+    <div class="api-banner-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+    </div>
+    <div class="api-banner-text">
+      <div class="api-banner-label">Add your Anthropic API key to get started</div>
+      <p>Your key is stored locally on your device and never sent anywhere except Anthropic's servers.</p>
+      <div class="api-input-row">
+        <input type="password" id="apiKeyInline" placeholder="sk-ant-..." autocomplete="off" />
+        <button class="btn-sm btn-primary" onclick="saveApiKey()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload -->
+
+  <div class="card" id="uploadCard">
+    <div class="card-label">Your space</div>
+    <div class="upload-zone" id="dropZone" style="cursor:default">
+      <input type="file" accept="image/*" multiple id="fileInput" style="display:none" />
+      <input type="file" accept="image/*" id="cameraInput" style="display:none" />
+      <div class="upload-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21,15 16,10 5,21"/>
+        </svg>
+      </div>
+      <div class="upload-title">Add a photo of your space</div>
+      <div class="upload-sub" style="margin-bottom:18px">Choose how you'd like to add it</div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button type="button" onclick="document.getElementById('cameraInput').click()" style="padding:9px 18px;border-radius:99px;background:var(--accent-soft);border:1px solid rgba(167,139,250,0.25);color:var(--accent);font-family:'Nunito Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Take photo
+        </button>
+        <button type="button" onclick="document.getElementById('fileInput').click()" style="padding:9px 18px;border-radius:99px;background:var(--surface-high);border:1px solid var(--border);color:var(--text-secondary);font-family:'Nunito Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+          Choose from library
+        </button>
+      </div>
+    </div>
+    <div class="image-grid" id="imageGrid"></div>
+  </div>
+
+  <!-- Settings -->
+
+  <div class="card">
+    <div class="card-label">Your session</div>
+    <div class="settings-grid">
+
+```
+  <!-- Time available -->
+  <div class="field">
+    <div class="field-label">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+      Time available
+    </div>
+    <div class="time-row">
+      <input type="number" class="input" id="timeHours" min="0" max="12" value="0" style="width:70px" placeholder="0" />
+      <span>hr</span>
+      <input type="number" class="input" id="timeMinutes" min="0" max="59" value="30" style="width:70px" placeholder="30" />
+      <span>min</span>
+    </div>
+  </div>
+
+  <!-- Breaks -->
+  <div class="field">
+    <div class="field-label">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+      Breaks
+    </div>
+    <select class="input" id="breaksSelect">
+      <option value="none">No breaks</option>
+      <option value="short">Short — 5 min every 25 min</option>
+      <option value="regular" selected>Regular — 10 min every 30 min</option>
+      <option value="frequent">Frequent — 10 min every 20 min</option>
+      <option value="custom">Custom</option>
+    </select>
+  </div>
+
+  <!-- Custom break -->
+  <div class="field" id="customBreakField" style="display:none">
+    <div class="field-label">Custom break schedule</div>
+    <input type="text" class="input" id="customBreak" placeholder="e.g. 5 min every 15 min" />
+  </div>
+
+  <!-- Level -->
+  <div class="field full">
+    <div class="field-label">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+      Energy level today
+    </div>
+    <div class="level-selector">
+      <button class="level-btn" data-level="haze" onclick="setLevel(this)">
+        <span class="level-name">Haze</span>
+        <span class="level-desc">Low capacity, big steps</span>
+      </button>
+      <button class="level-btn active" data-level="steady" onclick="setLevel(this)">
+        <span class="level-name">Steady</span>
+        <span class="level-desc">Moderate, manageable</span>
+      </button>
+      <button class="level-btn" data-level="clear" onclick="setLevel(this)">
+        <span class="level-name">Clear</span>
+        <span class="level-desc">Good focus, fine detail</span>
+      </button>
+      <button class="level-btn" data-level="sharp" onclick="setLevel(this)">
+        <span class="level-name">Sharp</span>
+        <span class="level-desc">Full bandwidth, deep clean</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Bodily considerations -->
+  <div class="field full">
+    <div class="field-label">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      Bodily considerations <span style="font-weight:400;color:var(--text-muted)"> — optional</span>
+    </div>
+    <textarea class="input" id="bodyInput" placeholder="e.g. limited grip in right hand, can't kneel, back pain today — anything goes" style="min-height:68px"></textarea>
+  </div>
+
+  <!-- No-go tasks -->
+  <div class="field full">
+    <div class="field-label">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+      Not today — no-go tasks <span style="font-weight:400;color:var(--text-muted)"> — optional</span>
+    </div>
+    <textarea class="input" id="nogoInput" placeholder="e.g. no carrying heavy things, no getting into cupboards, skip the floor today" style="min-height:68px"></textarea>
+  </div>
+
+</div>
+```
+
+  </div>
+
+  <button class="generate-btn" id="generateBtn" onclick="generate()" disabled>
+    <span class="btn-inner" id="btnInner">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/></svg>
+      Untangle this
+    </span>
+  </button>
+
+  <div class="error-msg" id="errorMsg"></div>
+
+  <!-- Results -->
+
+  <div id="resultsArea"></div>
+</div>
+
+<!-- Settings Modal -->
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Settings</div>
+      <button class="icon-btn" onclick="closeSettings()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="field" style="margin-bottom:16px">
+      <div class="field-label">Anthropic API Key</div>
+      <input type="password" class="input" id="apiKeyModal" placeholder="sk-ant-..." autocomplete="off" />
+      <div class="notice">Stored locally in your browser. Used only to communicate with Anthropic's API.</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-sm btn-primary" onclick="saveApiKeyModal()">Save key</button>
+      <button class="btn-sm btn-ghost" onclick="clearApiKey()">Clear key</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // State
+  let images = [];
+  let selectedLevel = 'steady';
+  let tasks = [];
+  let apiKey = localStorage.getItem('untangle_api_key') || '';
+  let theme = localStorage.getItem('untangle_theme') || 'dark';
+
+  // Init
+  document.documentElement.setAttribute('data-theme', theme);
+  if (apiKey) hideBanner();
+
+  // Theme toggle
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    theme = theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('untangle_theme', theme);
+  });
+
+  // Settings modal
+  document.getElementById('settingsBtn').addEventListener('click', () => {
+    document.getElementById('apiKeyModal').value = apiKey;
+    document.getElementById('modalOverlay').classList.add('open');
+  });
+
+  function closeSettings() {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+
+  function closeModal(e) {
+    if (e.target === document.getElementById('modalOverlay')) closeSettings();
+  }
+
+  function saveApiKey() {
+    const val = document.getElementById('apiKeyInline').value.trim();
+    if (!val) return;
+    apiKey = val;
+    localStorage.setItem('untangle_api_key', val);
+    hideBanner();
+    checkReady();
+  }
+
+  function saveApiKeyModal() {
+    const val = document.getElementById('apiKeyModal').value.trim();
+    if (!val) return;
+    apiKey = val;
+    localStorage.setItem('untangle_api_key', val);
+    hideBanner();
+    checkReady();
+    closeSettings();
+  }
+
+  function clearApiKey() {
+    apiKey = '';
+    localStorage.removeItem('untangle_api_key');
+    document.getElementById('apiBanner').classList.remove('hidden');
+    checkReady();
+    closeSettings();
+  }
+
+  function hideBanner() {
+    document.getElementById('apiBanner').classList.add('hidden');
+  }
+
+  // Level selector
+  function setLevel(btn) {
+    document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedLevel = btn.dataset.level;
+  }
+
+  // Breaks
+  document.getElementById('breaksSelect').addEventListener('change', function() {
+    document.getElementById('customBreakField').style.display =
+      this.value === 'custom' ? 'flex' : 'none';
+  });
+
+  // File handling
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+
+  fileInput.addEventListener('change', e => addFiles(e.target.files));
+  document.getElementById('cameraInput').addEventListener('change', e => addFiles(e.target.files));
+
+  const cameraInput = document.getElementById('cameraInput');
+  cameraInput.addEventListener('change', e => addFiles(e.target.files));
+
+  dropZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropZone.classList.add('drag-over');
+  });
+
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    addFiles(e.dataTransfer.files);
+  });
+
+  function addFiles(files) {
+    Array.from(files).forEach(file => {
+      if (!file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        images.push({ src: e.target.result, file, id: Date.now() + Math.random() });
+        renderGrid();
+        checkReady();
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function removeImage(id) {
+    images = images.filter(img => img.id !== id);
+    renderGrid();
+    checkReady();
+  }
+
+  function renderGrid() {
+    const grid = document.getElementById('imageGrid');
+    if (images.length === 0) { grid.innerHTML = ''; return; }
+
+    grid.innerHTML = images.map(img => `
+      <div class="image-thumb">
+        <img src="${img.src}" alt="Uploaded space" />
+        <button class="image-thumb-remove" onclick="removeImage(${img.id})" aria-label="Remove image">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    `).join('') + `
+      <button class="add-more-btn">
+        <input type="file" accept="image/*" multiple onchange="addFiles(this.files)" />
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add more
+      </button>
+    `;
+  }
+
+  function checkReady() {
+    const ready = images.length > 0 && apiKey;
+    document.getElementById('generateBtn').disabled = !ready;
+  }
+
+  // Compress image before sending
+  function compressImage(dataUrl, maxWidth = 640) {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.6));
+      };
+      img.src = dataUrl;
+    });
+  }
+
+  // Build prompt
+  function buildPrompt() {
+    const hours = parseInt(document.getElementById('timeHours').value) || 0;
+    const mins = parseInt(document.getElementById('timeMinutes').value) || 0;
+    const totalTime = hours * 60 + mins;
+    const breaksVal = document.getElementById('breaksSelect').value;
+    const body = document.getElementById('bodyInput').value.trim();
+    const nogo = document.getElementById('nogoInput').value.trim();
+    const customBreak = document.getElementById('customBreak').value.trim();
+
+    const breakText = breaksVal === 'custom' ? customBreak :
+      breaksVal === 'none' ? 'no breaks' :
+      breaksVal === 'short' ? '5-minute breaks every 25 minutes' :
+      breaksVal === 'regular' ? '10-minute breaks every 30 minutes' :
+      '10-minute breaks every 20 minutes';
+
+    const levelDescriptions = {
+      haze: 'very low energy and cognitive bandwidth today — use large, simple steps with minimal decisions required',
+      steady: 'moderate energy — use clear, reasonably-sized tasks without overwhelming detail',
+      clear: 'good focus available — can handle more granular, specific steps',
+      sharp: 'full bandwidth — can handle detailed, thorough task breakdowns'
+    };
+
+    return `You are a compassionate, practical assistant helping someone tidy and organise their space. The person may have ADHD, depression, or executive function challenges. Your tone should be warm, non-judgmental, and encouraging without being condescending.
+
+Analyse the provided image(s) of the space and generate a structured task plan.
+
+SESSION PARAMETERS:
+- Time available: ${totalTime > 0 ? `${totalTime} minutes` : 'flexible'}
+- Break schedule: ${breakText}
+- Energy level: ${selectedLevel} — ${levelDescriptions[selectedLevel]}
+${body ? `- Bodily considerations: ${body}` : ''}
+${nogo ? `- Tasks to avoid entirely: ${nogo}` : ''}
+
+INSTRUCTIONS:
+1. Look at the image(s) carefully and identify what needs to be done.
+2. Create a realistic, time-aware task list that fits within the available time including breaks.
+3. Order tasks by priority — quick wins first to build momentum.
+4. Each task should have a clear action, an optional brief note of encouragement or clarification, and an estimated time in minutes.
+5. Group tasks into phases if the session is longer than 30 minutes (e.g. "Phase 1 — Surface clear", "Phase 2 — Sort & organise").
+6. If bodily considerations are given, adapt every relevant task accordingly.
+7. Never include any task from the no-go list.
+8. At the end, add one warm closing line — not motivational-poster generic, but something specific to what they accomplished.
+
+Respond ONLY with valid JSON in this exact structure, no markdown, no preamble:
+{
+  "summary": "One sentence describing what you see and the overall plan",
+  "totalEstimatedMinutes": number,
+  "phases": [
+    {
+      "label": "Phase label or null if single phase",
+      "tasks": [
+        {
+          "text": "Clear action description",
+          "note": "Optional gentle note or null",
+          "minutes": number
+        }
+      ]
+    }
+  ],
+  "closing": "Warm specific closing line"
+}`;
+  }
+
+  // Generate
+  async function generate() {
+    const btn = document.getElementById('generateBtn');
+    const btnInner = document.getElementById('btnInner');
+    const errorMsg = document.getElementById('errorMsg');
+
+    btn.disabled = true;
+    errorMsg.classList.remove('visible');
+    btnInner.innerHTML = '<div class="spinner"></div> Reading your space...';
+
+    try {
+      const compressedImages = await Promise.all(images.map(img => compressImage(img.src)));
+      const content = [
+        ...compressedImages.map(dataUrl => ({
+          type: 'image',
+          source: { type: 'base64', media_type: 'image/jpeg', data: dataUrl.split(',')[1] }
+        })),
+        { type: 'text', text: buildPrompt() }
+      ];
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 60000);
+      let response;
+      try {
+        response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          signal: controller.signal,
+          headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+          body: JSON.stringify({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 1200,
+            messages: [{ role: 'user', content }]
+          })
+        });
+      } finally { clearTimeout(timeout); }
+
+      if (!response.ok) {
+        let errText = '';
+        try { const err = await response.json(); errText = err.error?.message || JSON.stringify(err); } catch(e2) { errText = await response.text(); }
+        throw new Error(`HTTP ${response.status}: ${errText}`);
+      }
+
+      const data = await response.json();
+      const raw = data.content.map(c => c.text || '').join('');
+      console.log('RAW RESPONSE:', raw);
+      console.log('DATA:', JSON.stringify(data));
+      const firstBrace = raw.indexOf('{');
+      const lastBrace = raw.lastIndexOf('}');
+      if (firstBrace === -1 || lastBrace === -1) throw new Error('No JSON in response. Raw: ' + raw.substring(0, 300));
+      const clean = raw.substring(firstBrace, lastBrace + 1);
+      let result;
+      try { result = JSON.parse(clean); } catch(pe) { throw new Error('Parse failed: ' + pe.message + ' | Raw start: ' + raw.substring(0, 200)); }
+
+      renderResults(result);
+    } catch (e) {
+      errorMsg.textContent = 'Error: ' + e.message;
+      errorMsg.classList.add('visible');
+    } finally {
+      btn.disabled = false;
+      btnInner.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/></svg> Untangle this`;
+      checkReady();
+    }
+  }
+
+  function renderResults(result) {
+    tasks = [];
+    let taskId = 0;
+    result.phases.forEach(phase => {
+      phase.tasks.forEach(t => {
+        tasks.push({ ...t, id: taskId++, done: false });
+      });
+    });
+
+    const area = document.getElementById('resultsArea');
+    area.innerHTML = '';
+
+    const card = document.createElement('div');
+    card.className = 'results-card';
+
+    const totalTasks = tasks.length;
+    const header = `
+      <div class="results-header">
+        <div>
+          <div class="results-title">${result.summary}</div>
+          <div class="results-meta">${result.totalEstimatedMinutes} min estimated &middot; ${totalTasks} tasks</div>
+        </div>
+        <div class="results-badge">${selectedLevel.charAt(0).toUpperCase() + selectedLevel.slice(1)}</div>
+      </div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+    `;
+
+    let taskHtml = '<div class="task-list" id="taskList">';
+    let globalIdx = 0;
+
+    result.phases.forEach((phase, pi) => {
+      if (result.phases.length > 1 && phase.label) {
+        taskHtml += `<div class="section-header">${phase.label}</div>`;
+      }
+      phase.tasks.forEach((t, ti) => {
+        const idx = globalIdx++;
+        taskHtml += `
+          <div class="task-item" id="task-${idx}" onclick="toggleTask(${idx})" style="animation-delay:${idx * 0.06}s">
+            <div class="task-check" id="check-${idx}">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="20,6 9,17 4,12"/></svg>
+            </div>
+            <div class="task-content">
+              <div class="task-text" id="text-${idx}">${t.text}</div>
+              ${t.note ? `<div class="task-note">${t.note}</div>` : ''}
+            </div>
+            <div class="task-duration">${t.minutes} min</div>
+          </div>
+        `;
+      });
+    });
+
+    taskHtml += '</div>';
+
+    const closing = `<div style="margin-top:20px;padding:16px;background:var(--accent-soft);border-radius:var(--radius-sm);font-size:13px;color:var(--text-secondary);font-style:italic;line-height:1.6">${result.closing}</div>`;
+    const resetBtn = `<button class="reset-btn" onclick="resetSession()">Start a new session</button>`;
+
+    card.innerHTML = header + taskHtml + closing + resetBtn;
+    area.appendChild(card);
+
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function toggleTask(idx) {
+    tasks[idx].done = !tasks[idx].done;
+    const item = document.getElementById(`task-${idx}`);
+    item.classList.toggle('done', tasks[idx].done);
+
+    const done = tasks.filter(t => t.done).length;
+    const pct = tasks.length > 0 ? (done / tasks.length) * 100 : 0;
+    const fill = document.getElementById('progressFill');
+    if (fill) fill.style.width = pct + '%';
+  }
+
+  function resetSession() {
+    document.getElementById('resultsArea').innerHTML = '';
+    images = [];
+    renderGrid();
+    checkReady();
+    document.getElementById('bodyInput').value = '';
+    document.getElementById('nogoInput').value = '';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+
+</body>
+</html>
