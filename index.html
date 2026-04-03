@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Untangle</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&family=Nunito+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #1a1714;
+  --bg2: #201d1a;
+  --surface: #272320;
+  --surface2: #302c28;
+  --surface3: #3a3530;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.12);
+  --text: #f0ebe4;
+  --text2: #a89f96;
+  --text3: #6b6360;
+  --berry: #c084a8;
+  --berry-soft: rgba(192,132,168,0.14);
+  --berry-glow: rgba(192,132,168,0.28);
+  --amber: #d4955a;
+  --amber-soft: rgba(212,149,90,0.14);
+  --sage: #7aad8e;
+  --sage-soft: rgba(122,173,142,0.12);
+  --danger: #e07070;
+  --r: 14px;
+  --rs: 10px;
+  --rx: 7px;
+  --ease: 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Nunito Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 70% 50% at 10% 5%,rgba(192,132,168,0.07) 0%,transparent 55%),radial-gradient(ellipse 50% 60% at 90% 95%,rgba(212,149,90,0.05) 0%,transparent 55%);pointer-events:none;z-index:0}
+
+.app{max-width:700px;margin:0 auto;padding:0 0 120px;position:relative;z-index:1}
+
+/* ── In-app browser warning ── */
+#browserWarning{display:none;background:#2a2010;border-bottom:1px solid rgba(212,149,90,0.3);padding:11px 20px;font-size:13px;color:var(–amber);text-align:center;line-height:1.5;position:sticky;top:0;z-index:200}
+#browserWarning span{color:rgba(212,149,90,0.65);font-size:12px;display:block;margin-top:2px}
+
+/* ── Header ── */
+.header{display:flex;align-items:center;justify-content:space-between;padding:28px 20px 0}
+.wordmark{font-family:‘Nunito’,sans-serif;font-size:21px;font-weight:800;letter-spacing:-0.5px;color:var(–text)}
+.wordmark em{font-style:normal;color:var(–berry)}
+.hactions{display:flex;gap:8px}
+.icon-btn{width:36px;height:36px;border-radius:50%;background:var(–surface);border:1px solid var(–border);color:var(–text2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(–ease)}
+.icon-btn:hover{background:var(–surface2);color:var(–text);border-color:var(–border2)}
+
+/* ── Nav ── */
+.nav{display:flex;gap:3px;padding:14px 20px;border-bottom:1px solid var(–border);margin-bottom:24px;overflow-x:auto;scrollbar-width:none;position:relative}
+.nav::-webkit-scrollbar{display:none}
+.nav-btn{padding:7px 14px;border-radius:99px;border:none;background:transparent;color:var(–text3);font-family:‘Nunito’,sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all var(–ease);display:flex;align-items:center;gap:6px;position:relative}
+.nav-btn:hover{color:var(–text2);background:var(–surface)}
+.nav-btn.active{background:var(–berry-soft);color:var(–berry)}
+.nav-badge{position:absolute;top:4px;right:6px;width:7px;height:7px;border-radius:50%;background:var(–amber);display:none}
+.nav-badge.show{display:block}
+
+/* ── Sections ── */
+.section{display:none;padding:0 20px;animation:fadeUp 0.28s ease}
+.section.active{display:block}
+
+/* ── API Banner ── */
+.api-banner{background:var(–surface);border:1px solid var(–border);border-radius:var(–r);padding:18px 20px;margin:0 20px 20px;animation:fadeUp 0.3s ease}
+.api-banner.hidden{display:none}
+.api-banner-label{font-size:14px;font-weight:700;margin-bottom:3px;color:var(–text)}
+.api-banner p{font-size:13px;color:var(–text2);margin-bottom:12px}
+.api-row{display:flex;gap:8px}
+.api-row input{flex:1;background:var(–surface2);border:1px solid var(–border);border-radius:var(–rx);padding:9px 12px;font-family:‘Nunito Sans’,sans-serif;font-size:13px;color:var(–text);outline:none;transition:border-color var(–ease)}
+.api-row input:focus{border-color:var(–berry)}
+.api-row input::placeholder{color:var(–text3)}
+
+/* ── Buttons ── */
+.btn{padding:9px 18px;border-radius:var(–rx);border:none;font-family:‘Nunito’,sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all var(–ease);display:inline-flex;align-items:center;gap:7px}
+.btn-berry{background:var(–berry);color:#fff}.btn-berry:hover{opacity:0.88}
+.btn-amber{background:var(–amber);color:#fff}.btn-amber:hover{opacity:0.88}
+.btn-ghost{background:transparent;color:var(–text2);border:1px solid var(–border)}.btn-ghost:hover{background:var(–surface2);color:var(–text);border-color:var(–border2)}
+.btn-full{width:100%;justify-content:center;padding:15px;border-radius:var(–r);font-size:15px}
+.btn-full:disabled{opacity:0.35;cursor:not-allowed}
+
+/* ── Check-in ── */
+.ci-wrap{padding:8px 0 24px;text-align:center}
+.ci-greeting{font-family:‘Nunito’,sans-serif;font-size:24px;font-weight:800;line-height:1.25;margin-bottom:7px}
+.ci-sub{font-size:14px;color:var(–text2);margin-bottom:28px}
+.state-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;text-align:left}
+.state-card{background:var(–surface);border:1.5px solid var(–border);border-radius:var(–r);padding:16px;cursor:pointer;transition:all var(–ease)}
+.state-card:hover{border-color:var(–border2);background:var(–surface2)}
+.state-card.active{border-color:var(–berry);background:var(–berry-soft)}
+.state-card.active .sname{color:var(–berry)}
+.sicon{font-size:22px;display:block;margin-bottom:5px}
+.sname{font-family:‘Nunito’,sans-serif;font-size:14px;font-weight:800;color:var(–text);display:block;transition:color var(–ease)}
+.sdesc{font-size:11px;color:var(–text2);line-height:1.4;display:block;margin-top:2px}
+
+.returning-card{background:var(–surface);border:1px solid var(–border);border-radius:var(–r);padding:18px 20px;margin-bottom:16px;display:flex;align-items:flex-start;gap:14px}
+.rc-text{flex:1}
+.rc-label{font-size:14px;font-weight:700;color:var(–text);margin-bottom:2px}
+.rc-sub{font-size:13px;color:var(–text2)}
+.rc-pill{background:var(–berry-soft);border:1px solid var(–berry-glow);border-radius:99px;padding:4px 12px;font-size:12px;font-weight:700;color:var(–berry);font-family:‘Nunito’,sans-serif;white-space:nowrap}
+.update-link{background:none;border:none;color:var(–berry);font-family:‘Nunito’,sans-serif;font-size:12px;font-weight:700;cursor:pointer;padding:0;margin-top:8px;display:block;text-decoration:underline;text-underline-offset:2px}
+.state-update-wrap{display:none;margin-bottom:16px}
+.state-update-wrap.open{display:block}
+.info-surface{background:var(–surface);border:1px solid var(–border);border-radius:var(–r);padding:20px;font-size:13px;color:var(–text2);line-height:1.75}
+.info-surface strong{color:var(–text)}
+
+/* ── Photo upload ── */
+.photo-card{background:var(–surface);border:1px solid var(–border);border-radius:var(–r);margin-bottom:14px;overflow:hidden}
+.photo-card-header{padding:18px 20px 14px;border-bottom:1px solid var(–border)}
+.card-eyebrow{font-size:11px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:var(–text3);margin-bottom:4px}
+.card-title{font-family:‘Nunito’,sans-serif;font-size:16px;font-weight:800;color:var(–text)}
+
+.upload-hero{background:var(–surface2);padding:28px 24px;text-align:center;transition:all var(–ease);cursor:pointer;border:none;width:100%}
+.upload-hero:hover{background:var(–surface3)}
+.upload-hero.has-images{padding:16px 20px;display:none}
+.upload-icon-wrap{width:52px;height:52px;margin:0 auto 14px;border-radius:50%;background:var(–berry-soft);color:var(–berry);display:flex;align-items:center;justify-content:center}
+.upload-h{font-family:‘Nunito’,sans-serif;font-size:15px;font-weight:800;margin-bottom:5px}
+.upload-sub{font-size:13px;color:var(–text2);margin-bottom:18px}
+.upload-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.ubtn{padding:9px 18px;border-radius:99px;font-family:‘Nunito Sans’,sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;transition:opacity var(–ease);border:none}
+.ubtn:hover{opacity:0.8}
+.ubtn-cam{background:var(–berry-soft);border:1px solid var(–berry-glow)!important;color:var(–berry)}
+.ubtn-lib{background:var(–surface3);border:1px solid var(–border2)!important;color:var(–text2)}
+
+/* Image preview strip */
+.preview-strip{padding:14px 20px;display:none}
+.preview-strip.visible{display:block}
+.preview-inner{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+.preview-inner::-webkit-scrollbar{display:none}
+.preview-thumb{position:relative;width:110px;height:90px;flex-shrink:0;border-radius:var(–rs);overflow:hidden;background:var(–surface3)}
+.preview-thumb img{width:100%;height:100%;object-fit:cover}
+.preview-thumb-remove{position:absolute;top:5px;right:5px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.75);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity var(–ease)}
+.preview-thumb:hover .preview-thumb-remove{opacity:1}
+.preview-add{width:80px;height:90px;flex-shrink:0;border-radius:var(–rs);border:1.5px dashed var(–border2);background:transparent;color:var(–text3);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:11px;font-family:‘Nunito Sans’,sans-serif;transition:all var(–ease);position:relative}
+.preview-add input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.preview-add:hover{border-color:var(–berry);color:var(–berry)}
+.reupload-row{display:flex;gap:8px;padding:0 20px 16px}
+
+/* ── Session settings ── */
+.session-card{background:var(–surface);border:1px solid var(–border);border-radius:var(–r);padding:20px;margin-bottom:14px}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field.full{grid-column:1/-1}
+.flabel{font-size:12px;font-weight:600;color:var(–text2);display:flex;align-items:center;gap:5px}
+.inp,textarea,.sel{background:var(–surface2);border:1px solid var(–border);border-radius:var(–rx);padding:9px 12px;font-family:‘Nunito Sans’,sans-serif;font-size:14px;color:var(–text);outline:none;width:100%;transition:border-color var(–ease)}
+.inp:focus,textarea:focus,.sel:focus{border-color:var(–berry)}
+.inp::placeholder,textarea::placeholder{color:var(–text3)}
+textarea{resize:vertical;min-height:68px;line-height:1.5}
+.sel{appearance:none;background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘8’ viewBox=‘0 0 12 8’%3E%3Cpath d=‘M1 1l5 5 5-5’ stroke=’%236b6360’ stroke-width=‘1.5’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”);background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;cursor:pointer}
+.sel option{background:var(–surface2);color:var(–text)}
+.trow{display:flex;align-items:center;gap:8px}
+.trow span{font-size:13px;color:var(–text3)}
+
+/* Level selector */
+.level-sel{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.lvl-btn{background:var(–surface2);border:1.5px solid var(–border);border-radius:var(–rs);padding:10px 6px;text-align:center;cursor:pointer;transition:all var(–ease);font-family:‘Nunito’,sans-serif}
+.lvl-btn .ln{font-size:12px;font-weight:800;color:var(–text2);display:block;transition:color var(–ease)}
+.lvl-btn .ld{font-size:10px;color:var(–text3);display:block;margin-top:2px}
+.lvl-btn.active{border-color:var(–berry);background:var(–berry-soft)}
+.lvl-btn.active .ln{color:var(–berry)}
+.lvl-btn.active .ld{color:var(–text2)}
+
+/* Task mode toggle */
+.mode-toggle{display:flex;gap:0;background:var(–surface2);border-radius:var(–rs);padding:3px;border:1px solid var(–border)}
+.mode-btn{flex:1;padding:8px 10px;border-radius:8px;border:none;background:transparent;color:var(–text3);font-family:‘Nunito’,sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all var(–ease);text-align:center}
+.mode-btn.active{background:var(–surface3);color:var(–text);box-shadow:0 1px 4px rgba(0,0,0,0.3)}
+
+/* Error */
+.error-msg{background:rgba(224,112,112,0.08);border:1px solid rgba(224,112,112,0.2);border-radius:var(–rs);padding:12px 14px;font-size:13px;color:var(–danger);margin-top:10px;display:none}
+.error-msg.visible{display:block}
+
+/* ── Task Tiles ── */
+.results-header-bar{display:flex;align-items:center;justify-content:space-between;margin:20px 0 14px}
+.results-h{font-family:‘Nunito’,sans-serif;font-size:18px;font-weight:800}
+.results-meta-pill{background:var(–berry-soft);border:1px solid var(–berry-glow);border-radius:99px;padding:4px 12px;font-size:12px;font-weight:700;color:var(–berry);font-family:‘Nunito’,sans-serif}
+
+.session-progress{background:var(–surface2);border-radius:99px;height:4px;margin-bottom:20px;overflow:hidden}
+.session-progress-fill{height:100%;background:linear-gradient(90deg,var(–berry),var(–amber));border-radius:99px;transition:width 0.4s ease;width:0%}
+
+.tiles-grid{display:flex;flex-direction:column;gap:12px}
+
+.area-tile{background:var(–surface);border:1px solid var(–border);border-radius:var(–r);overflow:hidden;transition:border-color var(–ease)}
+.area-tile:hover{border-color:var(–border2)}
+.area-tile.all-done{opacity:0.5}
+
+.tile-header{display:flex;align-items:center;gap:12px;padding:16px 18px;cursor:pointer;user-select:none}
+.tile-icon{width:38px;height:38px;border-radius:var(–rs);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px}
+.tile-icon.berry{background:var(–berry-soft)}
+.tile-icon.amber{background:var(–amber-soft)}
+.tile-icon.sage{background:var(–sage-soft)}
+.tile-title-wrap{flex:1}
+.tile-title{font-family:‘Nunito’,sans-serif;font-size:14px;font-weight:800;color:var(–text)}
+.tile-subtitle{font-size:12px;color:var(–text2);margin-top:1px}
+.tile-meta{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.tile-time{font-size:12px;font-weight:700;color:var(–text3);font-family:‘Nunito’,sans-serif}
+.tile-chevron{color:var(–text3);transition:transform var(–ease)}
+.tile-chevron.open{transform:rotate(180deg)}
+.tile-done-count{font-size:11px;font-weight:700;color:var(–berry);font-family:‘Nunito’,sans-serif}
+
+.tile-body{display:none;border-top:1px solid var(–border);padding:4px 0}
+.tile-body.open{display:block}
+
+/* One-at-a-time mode */
+.single-task-view{padding:16px 18px}
+.single-task-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(–text3);margin-bottom:10px}
+.single-task-main{font-family:‘Nunito’,sans-serif;font-size:17px;font-weight:800;color:var(–text);line-height:1.35;margin-bottom:6px}
+.single-task-note{font-size:13px;color:var(–text2);font-style:italic;margin-bottom:14px}
+.single-task-time{font-size:12px;color:var(–text3);font-weight:700;margin-bottom:16px}
+.single-task-actions{display:flex;gap:8px}
+.single-nav-btn{flex:1;padding:11px;border-radius:var(–rs);border:1px solid var(–border);background:transparent;color:var(–text2);font-family:‘Nunito’,sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all var(–ease)}
+.single-nav-btn:hover{background:var(–surface2);color:var(–text)}
+.single-done-btn{flex:2;padding:11px;border-radius:var(–rs);border:none;background:var(–berry);color:#fff;font-family:‘Nunito’,sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:opacity var(–ease)}
+.single-done-btn:hover{opacity:0.88}
+
+/* List mode task items */
+.task-item{display:flex;align-items:flex-start;gap:12px;padding:13px 18px;border-bottom:1px solid var(–border);cursor:pointer;transition:background var(–ease)}
+.task-item:last-child{border-bottom:none}
+.task-item:hover{background:var(–surface2)}
+.task-item.done{opacity:0.38}
+.task-item.done .task-text{text-decoration:line-through;color:var(–text3)}
+.task-check{width:20px;height:20px;border-radius:50%;border:1.5px solid var(–border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all var(–ease);margin-top:1px;color:transparent}
+.task-item.done .task-check{background:var(–berry);border-color:var(–berry);color:#fff}
+.task-content{flex:1}
+.task-text{font-size:14px;color:var(–text);font-weight:500;line-height:1.45}
+.task-note{font-size:12px;color:var(–text2);margin-top:3px;font-style:italic}
+.task-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.task-mins{font-size:12px;color:var(–text3);font-weight:700;font-family:‘Nunito’,sans-serif}
+.defer-btn{background:none;border:1px solid var(–border);border-radius:99px;padding:2px 8px;font-size:10px;font-weight:700;color:var(–text3);cursor:pointer;font-family:‘Nunito’,sans-serif;transition:all var(–ease);white-space:nowrap}
+.defer-btn:hover{border-color:var(–amber);color:var(–amber);background:var(–amber-soft)}
+
+.closing-note{margin-top:16px;padding:16px 18px;background:var(–surface);border:1px solid var(–border);border-radius:var(–r);font-size:13px;color:var(–text2);font-style:italic;line-height:1.7;border-left:3px solid var(–berry)}
+
+.new-session-btn{margin-top:12px;width:100%;padding:12px;border-radius:var(–rs);background:transparent;border:1px solid var(–border);color:var(–text2);font-family:‘Nunito’,sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all var(–ease)}
+.new-session-btn:hover{background:var(–surface2);color:var(–text)}
+
+/* ── Deferred tab ── */
+.deferred-empty{text-align:center;padding:48px 24px}
+.deferred-empty-icon{width:56px;height:56px;margin:0 auto 16px;border-radius:50%;background:var(–amber-soft);color:var(–amber);display:flex;align-items:center;justify-content:center}
+.deferred-empty h3{font-family:‘Nunito’,sans-serif;font-size:17px;font-weight:800;margin-bottom:6px}
+.deferred-empty p{font-size:13px;color:var(–text2);line-height:1.6}
+
+.deferred-item{background:var(–surface);border:1px solid var(–border);border-radius:var(–r);padding:16px 18px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px;transition:border-color var(–ease)}
+.deferred-item:hover{border-color:var(–border2)}
+.deferred-item-content{flex:1}
+.deferred-item-text{font-size:14px;font-weight:600;color:var(–text);line-height:1.45}
+.deferred-item-note{font-size:12px;color:var(–text2);font-style:italic;margin-top:3px}
+.deferred-item-meta{font-size:11px;color:var(–text3);margin-top:6px;display:flex;gap:10px}
+.deferred-item-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0}
+.do-now-btn{background:var(–berry-soft);border:1px solid var(–berry-glow);border-radius:var(–rx);padding:5px 10px;font-size:11px;font-weight:700;color:var(–berry);cursor:pointer;font-family:‘Nunito’,sans-serif;transition:opacity var(–ease)}
+.do-now-btn:hover{opacity:0.8}
+.remove-deferred-btn{background:none;border:1px solid var(–border);border-radius:var(–rx);padding:5px 10px;font-size:11px;font-weight:700;color:var(–text3);cursor:pointer;font-family:‘Nunito’,sans-serif;transition:all var(–ease)}
+.remove-deferred-btn:hover{border-color:var(–danger);color:var(–danger)}
+
+.deferred-section-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(–text3);margin:20px 0 10px;display:flex;align-items:center;gap:8px}
+.deferred-section-label::after{content:’’;flex:1;height:1px;background:var(–border)}
+
+/* ── Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity var(–ease)}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(–surface);border:1px solid var(–border2);border-radius:var(–r);padding:24px;width:100%;max-width:420px;transform:translateY(10px);transition:transform var(–ease)}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.modal-title{font-family:‘Nunito’,sans-serif;font-size:17px;font-weight:800}
+.notice{font-size:12px;color:var(–text3);margin-top:7px;line-height:1.5}
+
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite}
+
+/* ── Responsive ── */
+@media(max-width:500px){
+.sg{grid-template-columns:1fr}
+.field.full{grid-column:1}
+.level-sel{grid-template-columns:repeat(2,1fr)}
+.state-grid{grid-template-columns:1fr 1fr}
+.single-task-actions{flex-wrap:wrap}
+}
+</style>
+
+</head>
+<body>
+
+<div id="browserWarning">
+  For the best experience, open this in Safari or Chrome.
+  <span>Tap the share icon ↑ then choose "Open in Safari"</span>
+</div>
+
+<div class="app">
+
+  <div class="header">
+    <div class="wordmark">un<em>tangle</em></div>
+    <div class="hactions">
+      <button class="icon-btn" id="themeBtn" title="Toggle theme">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+      <button class="icon-btn" id="settingsBtn" title="Settings">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <button class="nav-btn active" data-section="checkin">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      Arriving
+    </button>
+    <button class="nav-btn" data-section="tidy">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+      Untangle a space
+    </button>
+    <button class="nav-btn" data-section="deferred">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+      Later
+      <div class="nav-badge" id="deferredBadge"></div>
+    </button>
+  </nav>
+
+  <div class="api-banner" id="apiBanner">
+    <div class="api-banner-label">Add your Anthropic API key to get started</div>
+    <p>Stored locally on your device only. Never shared except with Anthropic's servers.</p>
+    <div class="api-row">
+      <input type="password" id="apiKeyInline" placeholder="sk-ant-..." autocomplete="off" />
+      <button class="btn btn-berry" onclick="saveApiKey()">Save</button>
+    </div>
+  </div>
+
+  <!-- ── Arriving ── -->
+
+  <div class="section active" id="section-checkin">
+    <div id="checkinMain"></div>
+  </div>
+
+  <!-- ── Untangle a space ── -->
+
+  <div class="section" id="section-tidy">
+
+```
+<div class="photo-card">
+  <div class="photo-card-header">
+    <div class="card-eyebrow">Your space</div>
+    <div class="card-title">What needs untangling?</div>
+  </div>
+
+  <div class="upload-hero" id="uploadHero">
+    <input type="file" accept="image/*" multiple id="fileInput" style="display:none" />
+    <input type="file" accept="image/*" id="cameraInput" style="display:none" />
+    <div class="upload-icon-wrap">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+    </div>
+    <div class="upload-h">Add a photo of your space</div>
+    <div class="upload-sub">The more context, the better the plan</div>
+    <div class="upload-btns">
+      <button type="button" class="ubtn ubtn-cam" onclick="document.getElementById('cameraInput').click()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Camera
+      </button>
+      <button type="button" class="ubtn ubtn-lib" onclick="document.getElementById('fileInput').click()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+        Library
+      </button>
+    </div>
+  </div>
+
+  <div class="preview-strip" id="previewStrip">
+    <div class="preview-inner" id="previewInner"></div>
+  </div>
+  <div class="reupload-row" id="reuploadRow" style="display:none">
+    <button type="button" class="ubtn ubtn-cam" onclick="document.getElementById('cameraInput').click()" style="font-size:12px;padding:6px 12px">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      Camera
+    </button>
+    <button type="button" class="ubtn ubtn-lib" onclick="document.getElementById('fileInput').click()" style="font-size:12px;padding:6px 12px">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+      Library
+    </button>
+  </div>
+</div>
+
+<div class="session-card">
+  <div class="card-eyebrow" style="margin-bottom:14px">Your session</div>
+  <div class="sg">
+
+    <div class="field">
+      <div class="flabel">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+        Time available
+      </div>
+      <div class="trow">
+        <input type="number" class="inp" id="timeHours" min="0" max="12" value="0" style="width:58px" />
+        <span>hr</span>
+        <input type="number" class="inp" id="timeMinutes" min="0" max="59" value="30" style="width:58px" />
+        <span>min</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="flabel">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+        Breaks
+      </div>
+      <select class="sel" id="breaksSelect">
+        <option value="none">No breaks</option>
+        <option value="short">Short — 5 min / 25 min</option>
+        <option value="regular" selected>Regular — 10 min / 30 min</option>
+        <option value="frequent">Frequent — 10 min / 20 min</option>
+      </select>
+    </div>
+
+    <div class="field full">
+      <div class="flabel">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+        Energy right now
+      </div>
+      <div class="level-sel">
+        <button class="lvl-btn" data-level="haze" onclick="setLevel(this)"><span class="ln">Haze</span><span class="ld">Low, big steps</span></button>
+        <button class="lvl-btn active" data-level="steady" onclick="setLevel(this)"><span class="ln">Steady</span><span class="ld">Moderate</span></button>
+        <button class="lvl-btn" data-level="clear" onclick="setLevel(this)"><span class="ln">Clear</span><span class="ld">Good focus</span></button>
+        <button class="lvl-btn" data-level="sharp" onclick="setLevel(this)"><span class="ln">Sharp</span><span class="ld">Full bandwidth</span></button>
+      </div>
+    </div>
+
+    <div class="field full">
+      <div class="flabel">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        Bodily considerations <span style="font-weight:400;color:var(--text3);margin-left:4px">optional</span>
+      </div>
+      <textarea class="inp" id="bodyInput" placeholder="e.g. limited grip in right hand, back pain today, can't kneel"></textarea>
+    </div>
+
+    <div class="field full">
+      <div class="flabel">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+        Not today <span style="font-weight:400;color:var(--text3);margin-left:4px">optional</span>
+      </div>
+      <textarea class="inp" id="nogoInput" placeholder="e.g. no heavy lifting, skip the floor, not the wardrobe today"></textarea>
+    </div>
+
+    <div class="field full">
+      <div class="flabel">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+        How would you like to see tasks?
+      </div>
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="modeList" onclick="setTaskMode('list')">All visible</button>
+        <button class="mode-btn" id="modeOne" onclick="setTaskMode('one')">One at a time</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<button class="btn btn-berry btn-full" id="generateBtn" onclick="generate()" disabled>
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/></svg>
+  <span id="generateLabel">Untangle this</span>
+</button>
+
+<div class="error-msg" id="errorMsg"></div>
+<div id="resultsArea"></div>
+```
+
+  </div>
+
+  <!-- ── Later ── -->
+
+  <div class="section" id="section-deferred">
+    <div id="deferredArea"></div>
+  </div>
+
+</div>
+
+<!-- Settings Modal -->
+
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeSettings()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Settings</div>
+      <button class="icon-btn" onclick="closeSettings()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="field" style="margin-bottom:14px">
+      <div class="flabel">Anthropic API Key</div>
+      <input type="password" class="inp" id="apiKeyModal" placeholder="sk-ant-..." autocomplete="off" />
+      <div class="notice">Stored in your browser only. Never leaves your device except to reach Anthropic's API.</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-berry" onclick="saveApiKeyModal()">Save</button>
+      <button class="btn btn-ghost" onclick="clearApiKey()">Clear</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Constants ──────────────────────────────────────────
+const STATES=[
+  {id:'scattered',icon:'🌀',name:'Scattered',desc:'Mind everywhere, hard to land on anything'},
+  {id:'heavy',icon:'🌧',name:'Heavy',desc:'Low energy, things feel like a lot'},
+  {id:'okay',icon:'🌤',name:'Okay',desc:'Baseline — nothing special either way'},
+  {id:'motivated',icon:'☀️',name:'Motivated',desc:'Ready to get into something'},
+  {id:'wired',icon:'⚡',name:'Wired',desc:'Lots of energy, hard to direct it'},
+];
+const STATE_INFLUENCE={
+  scattered:'The person is scattered — give no more than 3 tasks total across all areas, one area only, keep instructions extremely simple.',
+  heavy:'The person is heavy and low-energy — no more than 4 tasks, gentle language, small wins first, nothing overwhelming.',
+  okay:'The person is at baseline — standard breakdown, warm tone.',
+  motivated:'The person is motivated — can handle a full plan across multiple areas.',
+  wired:'The person is wired — structure tasks as a clear sprint, channel the energy through clear ordering.',
+};
+const S2L={scattered:'haze',heavy:'haze',okay:'steady',motivated:'clear',wired:'sharp'};
+const TILE_ICONS=['🪴','📦','🛋','🖥','🧺','📚','🧹','✨'];
+const TILE_COLORS=['berry','amber','sage','berry','amber','sage','berry','amber'];
+
+// ── App state ──────────────────────────────────────────
+let apiKey=localStorage.getItem('ut_key')||'';
+let currentState=localStorage.getItem('ut_state')||null;
+let stateDate=localStorage.getItem('ut_state_date')||null;
+let images=[];
+let selectedLevel='steady';
+let taskMode='list';
+let tasks=[];
+let deferredTasks=JSON.parse(localStorage.getItem('ut_deferred')||'[]');
+
+// ── Init ──────────────────────────────────────────────
+(function(){
+  const ua=navigator.userAgent;
+  if(/Claude|FBAN|FBAV|Instagram|Line|MicroMessenger/.test(ua)||
+    (ua.includes('Mobile')&&!ua.includes('Safari')&&!ua.includes('Chrome')&&!ua.includes('Firefox')))
+    document.getElementById('browserWarning').style.display='block';
+})();
+
+if(apiKey)document.getElementById('apiBanner').classList.add('hidden');
+renderCheckin();
+renderDeferred();
+updateDeferredBadge();
+checkReady();
+
+// ── Theme (dark only for now) ──────────────────────────
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  // reserved for future light mode
+});
+
+// ── Settings ──────────────────────────────────────────
+document.getElementById('settingsBtn').addEventListener('click',()=>{
+  document.getElementById('apiKeyModal').value=apiKey;
+  document.getElementById('modalOverlay').classList.add('open');
+});
+function closeSettings(){document.getElementById('modalOverlay').classList.remove('open')}
+function saveApiKey(){
+  const v=document.getElementById('apiKeyInline').value.trim();
+  if(!v)return;apiKey=v;localStorage.setItem('ut_key',v);
+  document.getElementById('apiBanner').classList.add('hidden');checkReady();
+}
+function saveApiKeyModal(){
+  const v=document.getElementById('apiKeyModal').value.trim();
+  if(!v)return;apiKey=v;localStorage.setItem('ut_key',v);
+  document.getElementById('apiBanner').classList.add('hidden');checkReady();closeSettings();
+}
+function clearApiKey(){
+  apiKey='';localStorage.removeItem('ut_key');
+  document.getElementById('apiBanner').classList.remove('hidden');checkReady();closeSettings();
+}
+
+// ── Nav ───────────────────────────────────────────────
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('section-'+btn.dataset.section).classList.add('active');
+  });
+});
+
+// ── Check-in ──────────────────────────────────────────
+function renderCheckin(){
+  const wrap=document.getElementById('checkinMain');
+  const today=new Date().toDateString();
+  const hasState=stateDate===today&&currentState;
+  if(hasState){
+    const s=STATES.find(x=>x.id===currentState);
+    wrap.innerHTML=`
+      <div class="returning-card">
+        <div class="rc-text">
+          <div class="rc-label">Still arriving as <strong>${s.name}</strong>?</div>
+          <div class="rc-sub">${s.desc}</div>
+          <button class="update-link" onclick="showStateUpdate()">Update my state</button>
+        </div>
+        <div class="rc-pill">${s.icon} ${s.name}</div>
+      </div>
+      <div class="state-update-wrap" id="stateUpdateWrap">
+        ${buildStateGrid()}
+        <button class="btn btn-ghost" style="width:100%;margin-top:8px;justify-content:center" onclick="hideStateUpdate()">Keep current</button>
+      </div>
+      <div class="info-surface">
+        Your emotional state quietly shapes how Untangle reads your space and phrases your tasks today.<br><br>
+        When you're ready, head to <strong>Untangle a space</strong>.
+      </div>`;
+  } else {
+    const h=new Date().getHours();
+    const gr=h<12?'Good morning.':h<17?'Good afternoon.':'Good evening.';
+    wrap.innerHTML=`
+      <div class="ci-wrap">
+        <div class="ci-greeting">${gr}<br>How are you arriving today?</div>
+        <div class="ci-sub">This shapes how Untangle works with you — no right answer.</div>
+        ${buildStateGrid()}
+      </div>`;
+  }
+}
+function buildStateGrid(){
+  return `<div class="state-grid">${STATES.map(s=>`
+    <button class="state-card${currentState===s.id?' active':''}" onclick="selectState('${s.id}')">
+      <span class="sicon">${s.icon}</span>
+      <span class="sname">${s.name}</span>
+      <span class="sdesc">${s.desc}</span>
+    </button>`).join('')}</div>`;
+}
+function selectState(id){
+  currentState=id;const today=new Date().toDateString();stateDate=today;
+  localStorage.setItem('ut_state',id);localStorage.setItem('ut_state_date',today);
+  const mapped=S2L[id];
+  if(mapped){selectedLevel=mapped;document.querySelectorAll('.lvl-btn').forEach(b=>b.classList.toggle('active',b.dataset.level===mapped));}
+  renderCheckin();
+}
+function showStateUpdate(){document.getElementById('stateUpdateWrap').classList.add('open')}
+function hideStateUpdate(){document.getElementById('stateUpdateWrap').classList.remove('open')}
+
+// ── Upload ────────────────────────────────────────────
+document.getElementById('fileInput').addEventListener('change',e=>addFiles(e.target.files));
+document.getElementById('cameraInput').addEventListener('change',e=>addFiles(e.target.files));
+
+function addFiles(files){
+  Array.from(files).forEach(file=>{
+    if(!file.type.startsWith('image/'))return;
+    const r=new FileReader();
+    r.onload=e=>{
+      compressImage(e.target.result).then(compressed=>{
+        images.push({src:compressed,id:Date.now()+Math.random()});
+        renderPreviews();checkReady();
+      });
+    };
+    r.readAsDataURL(file);
+  });
+}
+function removeImage(id){images=images.filter(i=>i.id!==id);renderPreviews();checkReady()}
+function renderPreviews(){
+  const strip=document.getElementById('previewStrip');
+  const inner=document.getElementById('previewInner');
+  const hero=document.getElementById('uploadHero');
+  const rerow=document.getElementById('reuploadRow');
+  if(!images.length){
+    strip.classList.remove('visible');hero.style.display='';rerow.style.display='none';return;
+  }
+  hero.style.display='none';strip.classList.add('visible');rerow.style.display='flex';
+  inner.innerHTML=images.map(img=>`
+    <div class="preview-thumb">
+      <img src="${img.src}" alt="Space" />
+      <button class="preview-thumb-remove" onclick="removeImage(${img.id})">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>`).join('')+`
+    <button class="preview-add">
+      <input type="file" accept="image/*" multiple onchange="addFiles(this.files)" />
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add
+    </button>`;
+}
+
+// ── Controls ──────────────────────────────────────────
+function setLevel(btn){
+  document.querySelectorAll('.lvl-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');selectedLevel=btn.dataset.level;
+}
+function setTaskMode(m){
+  taskMode=m;
+  document.getElementById('modeList').classList.toggle('active',m==='list');
+  document.getElementById('modeOne').classList.toggle('active',m==='one');
+}
+function checkReady(){
+  const btn=document.getElementById('generateBtn');
+  if(btn)btn.disabled=!(images.length>0&&apiKey);
+}
+
+// ── Compress ──────────────────────────────────────────
+function compressImage(dataUrl,maxWidth=700){
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.createElement('canvas');
+      let w=img.width,h=img.height;
+      if(w>maxWidth){h=Math.round(h*maxWidth/w);w=maxWidth}
+      c.width=w;c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      resolve(c.toDataURL('image/jpeg',0.6));
+    };
+    img.src=dataUrl;
+  });
+}
+
+// ── Prompt ────────────────────────────────────────────
+function buildPrompt(){
+  const hours=parseInt(document.getElementById('timeHours').value)||0;
+  const mins=parseInt(document.getElementById('timeMinutes').value)||0;
+  const totalTime=hours*60+mins;
+  const breaksVal=document.getElementById('breaksSelect').value;
+  const body=document.getElementById('bodyInput').value.trim();
+  const nogo=document.getElementById('nogoInput').value.trim();
+  const breakText={none:'no breaks',short:'5 min breaks every 25 min',regular:'10 min breaks every 30 min',frequent:'10 min breaks every 20 min'}[breaksVal];
+  const levelDesc={haze:'very low energy — only essential big-step tasks, minimal decisions, maximum 2-3 tasks total',steady:'moderate energy — clear manageable tasks per area',clear:'good focus — more specific and granular steps',sharp:'full bandwidth — detailed thorough breakdown'}[selectedLevel];
+  const stateNote=currentState?STATE_INFLUENCE[currentState]:'';
+  return `You are a warm, thoughtful assistant helping someone tidy and organise their space. They may have ADHD or executive function difficulties. Be kind, specific, and non-judgmental.
+
+IMPORTANT: Before generating tasks, carefully study the image(s). Describe what you actually see — identify the specific objects, surfaces, and areas visible. Do not guess or assume. If something is unclear, describe it as what it most likely is. Be precise: "black metal shelving unit on the left" not just "shelves".
+
+SESSION:
+- Time: ${totalTime>0?totalTime+' minutes':'open-ended'}
+- Breaks: ${breakText}
+- Energy: ${selectedLevel} — ${levelDesc}
+${stateNote?'- Emotional context: '+stateNote:''}
+${body?'- Bodily considerations (adapt every relevant task): '+body:''}
+${nogo?'- Never suggest these tasks: '+nogo:''}
+
+OUTPUT RULES:
+1. Group tasks by distinct ACTION AREA (e.g. "The black shelving unit", "The desk surface", "The floor zone"). Use the actual objects/surfaces you see — not generic names.
+2. Each area should have 2–5 tasks, ordered by priority (quick wins first).
+3. Each task: a clear specific action, an optional one-line note explaining WHY it helps or a gentle tip, and a realistic time estimate in minutes.
+4. The total time of all tasks + breaks must not exceed the available time.
+5. End with one warm, specific closing line about what completing this will feel like.
+6. Be honest about what you see. If the space is quite cluttered, say so warmly. If it's mostly fine, say that too.
+
+Respond ONLY with valid JSON, no markdown fences:
+{
+  "spaceDescription": "2-3 sentences describing what you actually see in the image",
+  "totalEstimatedMinutes": number,
+  "areas": [
+    {
+      "name": "Specific area name based on what you see",
+      "estimatedMinutes": number,
+      "tasks": [
+        {"text": "Specific action", "note": "Why this helps or a gentle tip, or null", "minutes": number}
+      ]
+    }
+  ],
+  "closing": "One warm specific closing line"
+}`;
+}
+
+// ── Generate ──────────────────────────────────────────
+async function generate(){
+  const btn=document.getElementById('generateBtn');
+  const label=document.getElementById('generateLabel');
+  const errorMsg=document.getElementById('errorMsg');
+  btn.disabled=true;
+  label.innerHTML='<div class="spinner"></div> Reading your space...';
+  errorMsg.classList.remove('visible');
+  try{
+    const content=[
+      ...images.map(img=>({type:'image',source:{type:'base64',media_type:'image/jpeg',data:img.src.split(',')[1]}})),
+      {type:'text',text:buildPrompt()}
+    ];
+    const controller=new AbortController();
+    const to=setTimeout(()=>controller.abort(),90000);
+    let response;
+    try{
+      response=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',signal:controller.signal,
+        headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1500,messages:[{role:'user',content}]})
+      });
+    }finally{clearTimeout(to)}
+    if(!response.ok){
+      let msg=`HTTP ${response.status}`;
+      try{const e=await response.json();msg+=': '+(e.error?.message||JSON.stringify(e))}catch(e){}
+      throw new Error(msg);
+    }
+    const data=await response.json();
+    const raw=data.content.map(c=>c.text||'').join('');
+    const first=raw.indexOf('{'),last=raw.lastIndexOf('}');
+    if(first===-1||last===-1)throw new Error('Unexpected response format. Raw: '+raw.substring(0,200));
+    const result=JSON.parse(raw.substring(first,last+1));
+    renderResults(result);
+  }catch(e){
+    let msg=e.message;
+    if(e.name==='AbortError')msg='Request timed out. Try a smaller image or check your connection.';
+    errorMsg.textContent=msg;errorMsg.classList.add('visible');
+  }finally{
+    btn.disabled=false;
+    label.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/></svg> Untangle this`;
+    checkReady();
+  }
+}
+
+// ── Render results ────────────────────────────────────
+function renderResults(result){
+  tasks=[];
+  result.areas.forEach((area,ai)=>{
+    area.tasks.forEach((t,ti)=>{
+      tasks.push({...t,areaIndex:ai,areaName:area.name,id:`${ai}-${ti}`,done:false,deferred:false});
+    });
+  });
+
+  const area=document.getElementById('resultsArea');
+  const totalTasks=tasks.length;
+
+  let html=`
+    <div class="results-header-bar">
+      <div class="results-h">${result.spaceDescription.split('.')[0]}.</div>
+      <div class="results-meta-pill">${result.totalEstimatedMinutes} min</div>
+    </div>
+    <div class="session-progress"><div class="session-progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="tiles-grid" id="tilesGrid">`;
+
+  result.areas.forEach((areaData,ai)=>{
+    const colorClass=TILE_COLORS[ai%TILE_COLORS.length];
+    const icon=TILE_ICONS[ai%TILE_ICONS.length];
+    const areaTasks=tasks.filter(t=>t.areaIndex===ai);
+
+    if(taskMode==='list'){
+      const taskItems=areaTasks.map(t=>`
+        <div class="task-item" id="task-${t.id}" onclick="toggleTask('${t.id}')">
+          <div class="task-check" id="check-${t.id}">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="20,6 9,17 4,12"/></svg>
+          </div>
+          <div class="task-content">
+            <div class="task-text">${t.text}</div>
+            ${t.note?`<div class="task-note">${t.note}</div>`:''}
+          </div>
+          <div class="task-right">
+            <div class="task-mins">${t.minutes} min</div>
+            <button class="defer-btn" onclick="event.stopPropagation();deferTask('${t.id}')">Later</button>
+          </div>
+        </div>`).join('');
+
+      html+=`
+        <div class="area-tile" id="tile-${ai}">
+          <div class="tile-header" onclick="toggleTile(${ai})">
+            <div class="tile-icon ${colorClass}">${icon}</div>
+            <div class="tile-title-wrap">
+              <div class="tile-title">${areaData.name}</div>
+              <div class="tile-subtitle">${areaTasks.length} tasks · ${areaData.estimatedMinutes} min</div>
+            </div>
+            <div class="tile-meta">
+              <div class="tile-done-count" id="tile-done-${ai}"></div>
+              <svg class="tile-chevron" id="chev-${ai}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6,9 12,15 18,9"/></svg>
+            </div>
+          </div>
+          <div class="tile-body" id="tilebody-${ai}">
+            ${taskItems}
+          </div>
+        </div>`;
+    } else {
+      // One at a time mode
+      html+=`
+        <div class="area-tile" id="tile-${ai}">
+          <div class="tile-header" onclick="toggleTile(${ai})">
+            <div class="tile-icon ${colorClass}">${icon}</div>
+            <div class="tile-title-wrap">
+              <div class="tile-title">${areaData.name}</div>
+              <div class="tile-subtitle">${areaTasks.length} tasks · ${areaData.estimatedMinutes} min</div>
+            </div>
+            <div class="tile-meta">
+              <div class="tile-done-count" id="tile-done-${ai}"></div>
+              <svg class="tile-chevron" id="chev-${ai}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6,9 12,15 18,9"/></svg>
+            </div>
+          </div>
+          <div class="tile-body" id="tilebody-${ai}">
+            <div class="single-task-view" id="single-${ai}"></div>
+          </div>
+        </div>`;
+    }
+  });
+
+  html+=`</div>
+    <div class="closing-note" style="margin-top:16px">${result.closing}</div>
+    <button class="new-session-btn" onclick="resetSession()">Start a new session</button>`;
+
+  area.innerHTML=html;
+
+  if(taskMode==='one'){
+    result.areas.forEach((a,ai)=>renderSingleTask(ai));
+  }
+
+  area.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function toggleTile(ai){
+  const body=document.getElementById('tilebody-'+ai);
+  const chev=document.getElementById('chev-'+ai);
+  const isOpen=body.classList.contains('open');
+  body.classList.toggle('open',!isOpen);
+  chev.classList.toggle('open',!isOpen);
+}
+
+function renderSingleTask(ai){
+  const areaTasks=tasks.filter(t=>t.areaIndex===ai&&!t.done&&!t.deferred);
+  const wrap=document.getElementById('single-'+ai);
+  if(!wrap)return;
+  if(!areaTasks.length){
+    wrap.innerHTML=`<div style="padding:16px 18px;font-size:13px;color:var(--text2);font-style:italic">All tasks in this area are done or deferred.</div>`;
+    return;
+  }
+  const t=areaTasks[0];
+  wrap.innerHTML=`
+    <div class="single-task-label">Up next</div>
+    <div class="single-task-main">${t.text}</div>
+    ${t.note?`<div class="single-task-note">${t.note}</div>`:''}
+    <div class="single-task-time">${t.minutes} min estimated</div>
+    <div class="single-task-actions">
+      <button class="single-nav-btn" onclick="deferTask('${t.id}')">Later</button>
+      <button class="single-done-btn" onclick="markSingleDone('${t.id}',${ai})">Done</button>
+    </div>`;
+}
+
+function markSingleDone(id,ai){
+  const t=tasks.find(x=>x.id===id);
+  if(!t)return;
+  t.done=true;
+  updateProgress();
+  renderSingleTask(ai);
+  checkAreaDone(ai);
+}
+
+function toggleTask(id){
+  const t=tasks.find(x=>x.id===id);
+  if(!t)return;
+  t.done=!t.done;
+  const item=document.getElementById('task-'+id);
+  if(item)item.classList.toggle('done',t.done);
+  updateProgress();
+  checkAreaDone(parseInt(id.split('-')[0]));
+}
+
+function updateProgress(){
+  const done=tasks.filter(t=>t.done||t.deferred).length;
+  const fill=document.getElementById('progressFill');
+  if(fill)fill.style.width=(done/tasks.length*100)+'%';
+}
+
+function checkAreaDone(ai){
+  const areaTasks=tasks.filter(t=>t.areaIndex===ai);
+  const doneCt=areaTasks.filter(t=>t.done||t.deferred).length;
+  const doneEl=document.getElementById('tile-done-'+ai);
+  if(doneEl)doneEl.textContent=doneCt>0?`${doneCt}/${areaTasks.length}`:'';
+  const tile=document.getElementById('tile-'+ai);
+  if(tile)tile.classList.toggle('all-done',doneCt===areaTasks.length);
+}
+
+// ── Defer ─────────────────────────────────────────────
+function deferTask(id){
+  const t=tasks.find(x=>x.id===id);
+  if(!t)return;
+  t.deferred=true;
+  const deferred={
+    id:'d-'+Date.now(),
+    text:t.text,
+    note:t.note,
+    minutes:t.minutes,
+    areaName:t.areaName,
+    energyLevel:selectedLevel,
+    deferredAt:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'})
+  };
+  deferredTasks.unshift(deferred);
+  localStorage.setItem('ut_deferred',JSON.stringify(deferredTasks));
+  updateProgress();
+  // Hide item in list mode
+  const item=document.getElementById('task-'+id);
+  if(item){item.style.opacity='0';item.style.transition='opacity 0.3s ease';setTimeout(()=>item.style.display='none',300);}
+  // Re-render single mode
+  const ai=parseInt(id.split('-')[0]);
+  if(taskMode==='one')renderSingleTask(ai);
+  checkAreaDone(ai);
+  updateDeferredBadge();
+  renderDeferred();
+}
+
+function updateDeferredBadge(){
+  const badge=document.getElementById('deferredBadge');
+  if(badge)badge.classList.toggle('show',deferredTasks.length>0);
+}
+
+// ── Deferred tab ──────────────────────────────────────
+function renderDeferred(){
+  const area=document.getElementById('deferredArea');
+  if(!area)return;
+  if(!deferredTasks.length){
+    area.innerHTML=`
+      <div class="deferred-empty">
+        <div class="deferred-empty-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+        </div>
+        <h3>Nothing waiting here yet</h3>
+        <p>When you defer a task from a session, it lands here — ready to pick up when the time and energy is right.</p>
+      </div>`;
+    return;
+  }
+  area.innerHTML=`
+    <div style="padding:8px 0 20px">
+      <div style="font-family:'Nunito',sans-serif;font-size:18px;font-weight:800;margin-bottom:4px">Tasks for later</div>
+      <div style="font-size:13px;color:var(--text2)">Pick these up whenever the energy matches.</div>
+    </div>
+    ${deferredTasks.map(d=>`
+      <div class="deferred-item" id="di-${d.id}">
+        <div class="deferred-item-content">
+          <div class="deferred-item-text">${d.text}</div>
+          ${d.note?`<div class="deferred-item-note">${d.note}</div>`:''}
+          <div class="deferred-item-meta">
+            <span>${d.areaName}</span>
+            <span>~${d.minutes} min</span>
+            <span>Deferred ${d.deferredAt}</span>
+            <span>Best at: ${d.energyLevel}</span>
+          </div>
+        </div>
+        <div class="deferred-item-actions">
+          <button class="do-now-btn" onclick="removeDeferred('${d.id}',true)">Done now</button>
+          <button class="remove-deferred-btn" onclick="removeDeferred('${d.id}',false)">Remove</button>
+        </div>
+      </div>`).join('')}`;
+}
+
+function removeDeferred(id,done){
+  deferredTasks=deferredTasks.filter(d=>d.id!==id);
+  localStorage.setItem('ut_deferred',JSON.stringify(deferredTasks));
+  updateDeferredBadge();
+  renderDeferred();
+}
+
+function resetSession(){
+  document.getElementById('resultsArea').innerHTML='';
+  images=[];renderPreviews();checkReady();
+  document.getElementById('bodyInput').value='';
+  document.getElementById('nogoInput').value='';
+  tasks=[];
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>
