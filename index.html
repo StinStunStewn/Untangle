@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<title>Untangle</title>
+<link href="https://fonts.googleapis.com/css2?family=Limelight&family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── Reset ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{-webkit-tap-highlight-color:transparent;}
+a,button,input,select,textarea{color:inherit;font-family:inherit;-webkit-appearance:none;appearance:none;}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;}
+
+/* ── Tokens ── */
+:root{
+–bg0:#060e08;
+–bg1:#0a1510;
+–bg2:#0e1c14;
+–s1:#121f18;
+–s2:#182819;  /* slightly lighter */  
+–s3:#1e3022;
+–s4:#243828;
+–border:#ffffff0d;
+–border2:#ffffff18;
+–border3:#ffffff28;
+–text:#eae6de;
+–text2:#8fa891;
+–text3:#4e6252;
+–gold:#c4a257;
+–gold-s:rgba(196,162,87,0.12);
+–gold-g:rgba(196,162,87,0.22);
+–sage:#6fa882;
+–sage-s:rgba(111,168,130,0.10);
+–sage-g:rgba(111,168,130,0.20);
+–danger:#b06060;
+–r:13px;
+–rs:8px;
+–rx:6px;
+–ease:0.18s cubic-bezier(0.4,0,0.2,1);
+–nav-h:64px;
+}
+
+html{background:var(–bg0);}
+body{
+font-family:‘DM Sans’,sans-serif;
+background:
+radial-gradient(ellipse 120% 60% at 100% 0%,rgba(111,168,130,0.07) 0%,transparent 50%),
+radial-gradient(ellipse 80% 80% at 0% 100%,rgba(196,162,87,0.04) 0%,transparent 50%),
+linear-gradient(175deg,#0a1610 0%,#060e08 55%,#081208 100%);
+color:var(–text);
+min-height:100vh;
+line-height:1.6;
+padding-bottom:calc(var(–nav-h) + 16px);
+}
+
+.app{max-width:680px;margin:0 auto;position:relative;z-index:1;}
+
+/* ── In-app warning ── */
+#bw{display:none;background:rgba(196,162,87,0.07);border-bottom:1px solid rgba(196,162,87,0.18);padding:10px 20px;font-size:12px;color:var(–gold);text-align:center;line-height:1.5;position:sticky;top:0;z-index:200;letter-spacing:0.2px;}
+
+/* ── Header ── */
+.header{display:flex;align-items:center;justify-content:space-between;padding:30px 22px 0;}
+.wordmark{font-family:‘Limelight’,cursive;font-size:22px;font-weight:400;letter-spacing:5px;text-transform:lowercase;color:var(–text);}
+.wordmark em{font-style:normal;color:var(–sage);}
+.icon-btn{width:34px;height:34px;border-radius:50%;background:var(–s1);border:1px solid var(–border2);color:var(–text3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(–ease);}
+.icon-btn:hover{background:var(–s2);color:var(–text2);border-color:var(–border3);}
+.icon-btn svg{flex-shrink:0;}
+
+/* ── Bottom Nav ── */
+.bnav{position:fixed;bottom:0;left:0;right:0;height:var(–nav-h);background:rgba(6,14,8,0.92);border-top:1px solid var(–border2);display:flex;z-index:100;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding-bottom:env(safe-area-inset-bottom);}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:none;border:none;color:var(–text3);cursor:pointer;transition:color var(–ease);font-size:10px;font-weight:500;letter-spacing:0.4px;text-transform:uppercase;position:relative;}
+.ni svg{opacity:0.45;transition:opacity var(–ease);}
+.ni.active{color:var(–sage);}
+.ni.active svg{opacity:1;}
+.nbadge{position:absolute;top:9px;right:calc(50% - 16px);width:5px;height:5px;border-radius:50%;background:var(–gold);display:none;}
+.nbadge.show{display:block;}
+
+/* ── Sections ── */
+.section{display:none;padding:24px 22px;animation:fadeUp 0.24s ease;}
+.section.active{display:block;}
+
+/* ── API Banner ── */
+.api-banner{background:linear-gradient(145deg,#122018 0%,#0e1a14 60%,#0c1812 100%);border:1px solid rgba(111,168,130,0.12);border-radius:var(–r);padding:18px 20px;margin:18px 22px;animation:fadeUp 0.3s ease;}
+.api-banner.hidden{display:none;}
+.abl{font-family:‘Montserrat’,sans-serif;font-size:15px;font-weight:400;color:var(–text);margin-bottom:4px;}
+.abp{font-size:13px;color:var(–text2);margin-bottom:14px;line-height:1.55;}
+.abr{display:flex;gap:8px;}
+.abr input{flex:1;background:var(–s2);border:1px solid var(–border2);border-radius:var(–rx);padding:10px 14px;font-size:13px;color:var(–text);outline:none;transition:border-color var(–ease);}
+.abr input:focus{border-color:var(–gold);}
+.abr input::placeholder{color:var(–text3);}
+
+/* ── Buttons ── */
+.btn{padding:10px 18px;border-radius:var(–rx);border:none;font-family:‘DM Sans’,sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all var(–ease);display:inline-flex;align-items:center;gap:7px;letter-spacing:0.2px;}
+.btn-gold{background:var(–gold);color:#060e08;}
+.btn-gold:hover{opacity:0.88;}
+.btn-ghost{background:transparent;color:var(–text2);border:1px solid var(–border2);}
+.btn-ghost:hover{background:var(–s2);color:var(–text);border-color:var(–border3);}
+.btn-full{width:100%;justify-content:center;padding:15px;border-radius:var(–r);font-size:14px;font-weight:600;letter-spacing:0.3px;}
+.btn-full:disabled{opacity:0.28;cursor:not-allowed;}
+
+/* ── Check-in ── */
+.ci-h{padding:12px 0 28px;}
+.ci-title{font-family:‘Montserrat’,sans-serif;font-size:26px;font-weight:300;color:var(–text);line-height:1.2;margin-bottom:6px;}
+.ci-title em{font-style:italic;color:var(–sage);}
+.ci-sub{font-size:14px;color:var(–text2);line-height:1.6;}
+
+.state-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.sc{border-radius:var(–r);padding:18px 16px;cursor:pointer;transition:all var(–ease);text-align:left;border:1px solid transparent;position:relative;overflow:hidden;}
+.sc:nth-child(1){background:linear-gradient(145deg,#122018 0%,#0e1a14 60%,#142416 100%);border-color:rgba(111,168,130,0.10);}
+.sc:nth-child(2){background:linear-gradient(145deg,#1a1a10 0%,#141408 60%,#1c1c0e 100%);border-color:rgba(196,162,87,0.10);}
+.sc:nth-child(3){background:linear-gradient(145deg,#101a14 0%,#0c1610 60%,#122018 100%);border-color:rgba(111,168,130,0.08);}
+.sc:nth-child(4){background:linear-gradient(145deg,#1a1510 0%,#14100c 60%,#1c1810 100%);border-color:rgba(196,162,87,0.08);}
+.sc:nth-child(5){background:linear-gradient(145deg,#0e1a14 0%,#0c1812 60%,#121e16 100%);border-color:rgba(111,168,130,0.09);}
+.sc:hover{transform:translateY(-1px);border-color:rgba(111,168,130,0.22);box-shadow:0 6px 24px rgba(0,0,0,0.35);}
+.sc.active{border-color:var(–sage-g);box-shadow:0 0 0 1px var(–sage-g),0 6px 24px rgba(111,168,130,0.08);}
+.sc.active::before{content:’’;position:absolute;inset:0;background:rgba(111,168,130,0.06);pointer-events:none;}
+.sc.active .sn{color:var(–sage);}
+.si{width:30px;height:30px;border-radius:7px;background:rgba(255,255,255,0.05);color:var(–text3);display:flex;align-items:center;justify-content:center;margin-bottom:10px;transition:all var(–ease);border:1px solid rgba(255,255,255,0.06);}
+.sc.active .si{background:var(–sage-s);color:var(–sage);border-color:var(–sage-g);}
+.sn{font-family:‘Montserrat’,sans-serif;font-size:14px;font-weight:500;color:var(–text);display:block;margin-bottom:2px;transition:color var(–ease);}
+.sd{font-size:11px;color:var(–text2);line-height:1.4;display:block;}
+
+.ret-card{background:linear-gradient(145deg,#122018 0%,#0e1a14 60%,#0c1812 100%);border:1px solid rgba(111,168,130,0.09);border-radius:var(–r);padding:18px 20px;margin-bottom:14px;display:flex;align-items:flex-start;gap:14px;}
+.ret-body{flex:1;}
+.ret-label{font-family:‘Montserrat’,sans-serif;font-size:16px;font-weight:400;color:var(–text);margin-bottom:3px;}
+.ret-label em{font-style:italic;color:var(–sage);}
+.ret-sub{font-size:13px;color:var(–text2);}
+.ret-pill{background:var(–sage-s);border:1px solid var(–sage-g);border-radius:99px;padding:4px 12px;font-size:11px;font-weight:600;color:var(–sage);white-space:nowrap;flex-shrink:0;font-family:‘DM Sans’,sans-serif;letter-spacing:0.5px;}
+.update-link{background:none;border:none;color:var(–gold);font-size:12px;font-weight:500;cursor:pointer;padding:0;margin-top:10px;display:block;text-decoration:underline;text-underline-offset:3px;}
+.sup-wrap{display:none;margin-bottom:14px;}
+.sup-wrap.open{display:block;}
+.info-card{background:linear-gradient(145deg,#122018 0%,#0e1a14 60%,#0c1812 100%);border:1px solid rgba(111,168,130,0.09);border-radius:var(–r);padding:18px 20px;font-size:13px;color:var(–text2);line-height:1.75;}
+.info-card strong{color:var(–text);}
+
+/* ── Card ── */
+.card{background:linear-gradient(145deg,#122018 0%,#0e1a14 60%,#0c1812 100%);border:1px solid rgba(111,168,130,0.10);border-radius:var(–r);margin-bottom:14px;overflow:hidden;}
+.card-inner{padding:18px 20px;}
+.eyebrow{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(–text3);margin-bottom:14px;}
+
+/* ── Upload zone ── */
+.upload-zone{padding:32px 22px;text-align:center;background:linear-gradient(145deg,#122018 0%,#0e1a14 60%,#0c1812 100%);border:1px solid rgba(111,168,130,0.10);border-radius:var(–r);margin-bottom:14px;transition:all var(–ease);}
+.upload-zone:hover{border-color:rgba(111,168,130,0.22);}
+.uico{width:50px;height:50px;margin:0 auto 16px;border-radius:50%;background:var(–s3);color:var(–text2);display:flex;align-items:center;justify-content:center;border:1px solid var(–border2);}
+.utitle{font-family:‘Montserrat’,sans-serif;font-size:17px;font-weight:400;color:var(–text);margin-bottom:5px;}
+.usub{font-size:13px;color:var(–text2);margin-bottom:20px;}
+.ubtns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.ubtn{padding:9px 18px;border-radius:99px;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:7px;transition:opacity var(–ease);border:none;letter-spacing:0.2px;}
+.ubtn:active{opacity:0.75;}
+.ub-pri{background:var(–gold-s);border:1px solid var(–gold-g)!important;color:var(–gold);}
+.ub-sec{background:var(–s3);border:1px solid var(–border2)!important;color:var(–text2);}
+
+/* Preview */
+.prev-strip{display:none;margin-bottom:14px;}
+.prev-strip.vis{display:block;}
+.prev-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.prev-label{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(–text3);}
+.prev-row{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
+.prev-row::-webkit-scrollbar{display:none;}
+.pthumb{position:relative;width:115px;height:88px;flex-shrink:0;border-radius:var(–rs);overflow:hidden;background:var(–s2);border:1px solid var(–border);}
+.pthumb img{width:100%;height:100%;object-fit:cover;}
+.prem{position:absolute;top:5px;right:5px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.75);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity var(–ease);}
+.pthumb:hover .prem{opacity:1;}
+.padd{width:80px;height:88px;flex-shrink:0;border-radius:var(–rs);border:1px dashed var(–border2);background:transparent;color:var(–text3);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11px;transition:all var(–ease);position:relative;}
+.padd input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.padd:hover{border-color:var(–gold);color:var(–gold);}
+.arow{display:flex;gap:8px;margin-top:10px;}
+
+/* ── Form ── */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.field{display:flex;flex-direction:column;gap:7px;}
+.field.full{grid-column:1/-1;}
+.flabel{font-size:10px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;color:var(–text3);display:flex;align-items:center;gap:6px;}
+.inp,textarea,.sel{background:var(–s2);border:1px solid var(–border);border-radius:var(–rx);padding:10px 14px;font-size:14px;color:var(–text);outline:none;width:100%;transition:border-color var(–ease);}
+.inp:focus,textarea:focus,.sel:focus{border-color:var(–gold);}
+.inp::placeholder,textarea::placeholder{color:var(–text3);}
+textarea{resize:vertical;min-height:68px;line-height:1.55;}
+.sel{background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘11’ height=‘7’ viewBox=‘0 0 11 7’%3E%3Cpath d=‘M1 1l4.5 4.5L10 1’ stroke=’%234e6252’ stroke-width=‘1.5’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”);background-repeat:no-repeat;background-position:right 13px center;padding-right:32px;cursor:pointer;}
+.sel option{background:var(–s2);color:var(–text);}
+
+/* ── Time Picker ── */
+.time-picker{display:flex;align-items:center;gap:6px;}
+.scroll-picker{position:relative;width:68px;height:108px;overflow:hidden;border-radius:var(–rx);background:var(–s2);border:1px solid var(–border);cursor:ns-resize;user-select:none;}
+.scroll-picker::before,.scroll-picker::after{content:’’;position:absolute;left:0;right:0;height:36px;z-index:2;pointer-events:none;}
+.scroll-picker::before{top:0;background:linear-gradient(to bottom,var(–s2) 0%,transparent 100%);}
+.scroll-picker::after{bottom:0;background:linear-gradient(to top,var(–s2) 0%,transparent 100%);}
+.picker-track{display:flex;flex-direction:column;align-items:center;transition:transform 0.15s ease;will-change:transform;}
+.picker-item{height:36px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:300;color:var(–text3);transition:color var(–ease);width:68px;flex-shrink:0;font-family:‘Montserrat’,sans-serif;}
+.picker-item.selected{color:var(–text);font-weight:500;}
+.picker-highlight{position:absolute;top:36px;left:0;right:0;height:36px;border-top:1px solid var(–border2);border-bottom:1px solid var(–border2);pointer-events:none;z-index:1;}
+.tp-sep{font-size:20px;color:var(–text3);font-weight:300;padding:0 2px;}
+.tp-unit{font-size:11px;color:var(–text3);font-weight:500;letter-spacing:1px;text-transform:uppercase;width:28px;}
+
+/* Level selector */
+.level-sel{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.lvl{border-radius:var(–rs);padding:11px 6px;text-align:center;cursor:pointer;transition:all var(–ease);border:1px solid transparent;position:relative;overflow:hidden;}
+.lvl:nth-child(1){background:linear-gradient(145deg,#0e1c14 0%,#0a1610 100%);border-color:rgba(111,168,130,0.08);}
+.lvl:nth-child(2){background:linear-gradient(145deg,#121e16 0%,#0e1a12 100%);border-color:rgba(111,168,130,0.09);}
+.lvl:nth-child(3){background:linear-gradient(145deg,#1a1a0e 0%,#161608 100%);border-color:rgba(196,162,87,0.09);}
+.lvl:nth-child(4){background:linear-gradient(145deg,#1c1a10 0%,#181408 100%);border-color:rgba(196,162,87,0.10);}
+.lvl:hover{border-color:rgba(111,168,130,0.2);}
+.lvl .ln{font-family:‘Montserrat’,sans-serif;font-size:12px;font-weight:500;color:var(–text2);display:block;transition:color var(–ease);}
+.lvl .ld{font-size:10px;color:var(–text3);display:block;margin-top:2px;}
+.lvl.active{border-color:var(–sage-g);box-shadow:0 0 0 1px rgba(111,168,130,0.15);}
+.lvl.active::before{content:’’;position:absolute;inset:0;background:rgba(111,168,130,0.07);pointer-events:none;}
+.lvl.active .ln{color:var(–sage);}
+.lvl.active .ld{color:var(–text2);}
+
+/* Mode toggle */
+.mtoggle{display:flex;background:var(–s2);border-radius:var(–rs);padding:3px;border:1px solid var(–border);}
+.mbtn{flex:1;padding:9px 12px;border-radius:6px;border:none;background:transparent;color:var(–text3);font-size:12px;font-weight:500;cursor:pointer;transition:all var(–ease);letter-spacing:0.2px;}
+.mbtn.active{background:var(–s3);color:var(–text);box-shadow:0 1px 4px rgba(0,0,0,0.5);}
+
+/* Error */
+.err{background:rgba(176,96,96,0.07);border:1px solid rgba(176,96,96,0.18);border-radius:var(–rs);padding:12px 16px;font-size:13px;color:var(–danger);margin-top:12px;display:none;line-height:1.5;}
+.err.vis{display:block;}
+
+/* Spinner */
+.spinner{width:15px;height:15px;border:1.5px solid rgba(6,14,8,0.3);border-top-color:#060e08;border-radius:50%;animation:spin 0.7s linear infinite;}
+
+/* ── Results ── */
+/* Space description card */
+.space-desc-card{background:linear-gradient(145deg,#122018 0%,#0e1a14 60%,#0c1812 100%);border:1px solid rgba(111,168,130,0.10);border-radius:var(–r);padding:18px 20px;margin:20px 0 12px;}
+.space-desc-eyebrow{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(–text3);margin-bottom:8px;}
+.space-desc-text{font-size:13px;color:var(–text2);line-height:1.7;}
+
+.results-meta-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.results-count{font-size:13px;color:var(–text3);}
+.results-pill{background:var(–gold-s);border:1px solid var(–gold-g);border-radius:99px;padding:4px 12px;font-size:11px;font-weight:600;color:var(–gold);letter-spacing:0.4px;}
+
+.prog-track{height:2px;background:var(–s3);border-radius:99px;margin-bottom:18px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(–sage),var(–gold));border-radius:99px;transition:width 0.4s ease;width:0%;}
+
+/* Tiles */
+.tiles{display:flex;flex-direction:column;gap:8px;}
+.tile{border-radius:var(–r);overflow:hidden;transition:all var(–ease);border:1px solid rgba(111,168,130,0.09);position:relative;}
+.tile{background:linear-gradient(160deg,#122018 0%,#0e1a14 50%,#0a1410 100%);}
+.tile:nth-child(even){background:linear-gradient(160deg,#181808 0%,#121208 50%,#0e1008 100%);border-color:rgba(196,162,87,0.08);}
+.tile:hover{border-color:rgba(111,168,130,0.2);transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,0.3);}
+.tile.done-all{opacity:0.32;}
+
+.tile-hd{display:flex;align-items:center;gap:14px;padding:15px 18px;cursor:pointer;user-select:none;}
+.tile-num{width:28px;height:28px;border-radius:50%;background:var(–s3);color:var(–text3);display:flex;align-items:center;justify-content:center;font-family:‘Montserrat’,sans-serif;font-size:13px;font-weight:500;flex-shrink:0;border:1px solid var(–border2);transition:all var(–ease);}
+.tile.done-all .tile-num{background:var(–sage-s);color:var(–sage);border-color:var(–sage-g);}
+.tile-info{flex:1;min-width:0;}
+.tile-name{font-family:‘Montserrat’,sans-serif;font-size:14px;font-weight:500;color:var(–text);line-height:1.35;margin-bottom:2px;}
+.tile-sub{font-size:11px;color:var(–text3);letter-spacing:0.2px;}
+.tile-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.tile-prog{font-size:11px;color:var(–sage);font-weight:600;letter-spacing:0.3px;}
+.tile-chev{color:var(–text3);transition:transform var(–ease);}
+.tile-chev.open{transform:rotate(180deg);}
+
+.tile-body{display:none;border-top:1px solid var(–border);}
+.tile-body.open{display:block;}
+
+/* Task rows */
+.trow{display:flex;align-items:flex-start;gap:12px;padding:13px 18px;border-bottom:1px solid var(–border);cursor:pointer;transition:background var(–ease);}
+.trow:last-child{border-bottom:none;}
+.trow:hover{background:var(–s2);}
+.trow.done{opacity:0.32;}
+.trow.done .tt{text-decoration:line-through;color:var(–text3);}
+.tcb{width:18px;height:18px;border-radius:50%;border:1px solid var(–border3);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all var(–ease);margin-top:2px;color:transparent;}
+.trow.done .tcb{background:var(–sage);border-color:var(–sage);color:#060e08;}
+.tbody{flex:1;min-width:0;}
+.tt{font-size:14px;color:var(–text);line-height:1.45;}
+.tn{font-size:12px;color:var(–text2);margin-top:3px;font-style:italic;line-height:1.5;}
+.tright{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;}
+.tm{font-size:11px;color:var(–text3);font-weight:600;letter-spacing:0.3px;}
+.db{background:none;border:1px solid var(–border);border-radius:99px;padding:3px 9px;font-size:10px;font-weight:500;color:var(–text3);cursor:pointer;transition:all var(–ease);letter-spacing:0.3px;white-space:nowrap;}
+.db:hover{border-color:var(–gold);color:var(–gold);background:var(–gold-s);}
+
+/* One-at-a-time */
+.single-w{padding:18px 20px;}
+.slabel{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(–text3);margin-bottom:12px;}
+.stxt{font-family:‘Montserrat’,sans-serif;font-size:18px;font-weight:400;color:var(–text);line-height:1.4;margin-bottom:8px;}
+.snote{font-size:13px;color:var(–text2);font-style:italic;margin-bottom:8px;line-height:1.55;}
+.stime{font-size:11px;color:var(–text3);font-weight:600;letter-spacing:0.5px;margin-bottom:16px;}
+.sbtns{display:flex;gap:8px;}
+.slater{flex:1;padding:11px;border-radius:var(–rs);border:1px solid var(–border);background:transparent;color:var(–text2);font-size:13px;font-weight:500;cursor:pointer;transition:all var(–ease);}
+.slater:hover{background:var(–s2);color:var(–text);}
+.sdone{flex:2;padding:11px;border-radius:var(–rs);border:none;background:var(–sage);color:#060e08;font-size:13px;font-weight:600;cursor:pointer;transition:opacity var(–ease);}
+.sdone:hover{opacity:0.85;}
+
+/* Closing */
+.closing{margin-top:14px;padding:16px 20px;background:linear-gradient(145deg,#122018 0%,#0e1a14 60%,#0c1812 100%);border:1px solid rgba(111,168,130,0.10);border-left:2px solid var(–sage);border-radius:var(–r);font-size:13px;color:var(–text2);font-style:italic;line-height:1.8;}
+.ns-btn{margin-top:10px;width:100%;padding:12px;border-radius:var(–rs);background:transparent;border:1px solid var(–border);color:var(–text3);font-size:12px;font-weight:500;cursor:pointer;transition:all var(–ease);letter-spacing:0.3px;}
+.ns-btn:hover{background:var(–s2);color:var(–text2);border-color:var(–border2);}
+
+/* ── Later ── */
+.later-empty{text-align:center;padding:52px 20px;}
+.le-icon{width:50px;height:50px;margin:0 auto 16px;border-radius:50%;background:var(–s2);color:var(–text3);display:flex;align-items:center;justify-content:center;border:1px solid var(–border2);}
+.le-h{font-family:‘Montserrat’,sans-serif;font-size:20px;font-weight:300;color:var(–text);margin-bottom:8px;}
+.le-p{font-size:13px;color:var(–text2);line-height:1.65;max-width:280px;margin:0 auto;}
+
+.defer-item{background:var(–s1);border:1px solid var(–border);border-radius:var(–r);padding:15px 18px;margin-bottom:8px;display:flex;align-items:flex-start;gap:14px;transition:border-color var(–ease);}
+.defer-item:hover{border-color:var(–border2);}
+.di-c{flex:1;min-width:0;}
+.di-t{font-size:14px;color:var(–text);line-height:1.45;margin-bottom:3px;}
+.di-n{font-size:12px;color:var(–text2);font-style:italic;margin-bottom:7px;}
+.di-m{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(–text3);}
+.di-m span{display:flex;align-items:center;gap:4px;letter-spacing:0.2px;}
+.di-a{display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+.di-done{background:var(–sage-s);border:1px solid var(–sage-g);border-radius:var(–rx);padding:6px 11px;font-size:11px;font-weight:500;color:var(–sage);cursor:pointer;transition:opacity var(–ease);letter-spacing:0.3px;}
+.di-done:hover{opacity:0.78;}
+.di-rm{background:none;border:1px solid var(–border);border-radius:var(–rx);padding:6px 11px;font-size:11px;font-weight:500;color:var(–text3);cursor:pointer;transition:all var(–ease);}
+.di-rm:hover{border-color:var(–danger);color:var(–danger);}
+
+/* ── Modal ── */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:200;display:flex;align-items:center;justify-content:center;padding:22px;opacity:0;pointer-events:none;transition:opacity var(–ease);}
+.modal-ov.open{opacity:1;pointer-events:all;}
+.modal{background:var(–s2);border:1px solid var(–border3);border-radius:var(–r);padding:24px;width:100%;max-width:420px;transform:translateY(10px);transition:transform var(–ease);}
+.modal-ov.open .modal{transform:translateY(0);}
+.mhd{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.mtitle{font-family:‘Montserrat’,sans-serif;font-size:17px;font-weight:400;color:var(–text);}
+.notice{font-size:12px;color:var(–text3);margin-top:8px;line-height:1.55;}
+
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Responsive ── */
+@media(max-width:500px){
+.fg{grid-template-columns:1fr;}
+.field.full{grid-column:1;}
+.level-sel{grid-template-columns:repeat(2,1fr);}
+.state-grid{grid-template-columns:1fr 1fr;}
+}
+
+/* Force no blue anywhere */
+:focus{outline:2px solid var(–gold);outline-offset:2px;}
+:focus:not(:focus-visible){outline:none;}
+</style>
+
+</head>
+<body>
+
+<div id="bw">For best results, open in Safari or Chrome — tap share then "Open in Safari"</div>
+
+<div class="app">
+
+  <div class="header">
+    <div class="wordmark">un<em>tangle</em></div>
+    <button class="icon-btn" id="settingsBtn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
+
+  <div class="api-banner" id="apiBanner">
+    <div class="abl">Add your API key</div>
+    <p class="abp">Your Anthropic API key — stored locally on this device only, never shared except with Anthropic's servers.</p>
+    <div class="abr">
+      <input type="password" id="apiKeyInline" placeholder="sk-ant-..." autocomplete="off" />
+      <button class="btn btn-gold" onclick="saveApiKey()">Save</button>
+    </div>
+  </div>
+
+  <!-- Arriving -->
+
+  <div class="section active" id="section-arriving">
+    <div id="checkinMain"></div>
+  </div>
+
+  <!-- Untangle -->
+
+  <div class="section" id="section-untangle">
+
+```
+<div class="upload-zone" id="uploadZone">
+  <input type="file" accept="image/*" multiple id="fileInput" style="display:none">
+  <input type="file" accept="image/*" id="cameraInput" style="display:none">
+  <div class="uico">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+  </div>
+  <div class="utitle">Photograph your space</div>
+  <div class="usub">The more you show, the more specific the plan</div>
+  <div class="ubtns">
+    <button type="button" class="ubtn ub-pri" onclick="document.getElementById('cameraInput').click()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      Camera
+    </button>
+    <button type="button" class="ubtn ub-sec" onclick="document.getElementById('fileInput').click()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+      Library
+    </button>
+  </div>
+</div>
+
+<div class="prev-strip" id="prevStrip">
+  <div class="prev-hd">
+    <div class="prev-label">Your photos</div>
+  </div>
+  <div class="prev-row" id="prevRow"></div>
+  <div class="arow">
+    <button type="button" class="ubtn ub-pri" style="font-size:12px;padding:7px 14px" onclick="document.getElementById('cameraInput').click()">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      Camera
+    </button>
+    <button type="button" class="ubtn ub-sec" style="font-size:12px;padding:7px 14px" onclick="document.getElementById('fileInput').click()">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+      Library
+    </button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-inner">
+    <div class="eyebrow">Session</div>
+    <div class="fg">
+
+      <div class="field full">
+        <div class="flabel">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+          Time available
+        </div>
+        <div class="time-picker">
+          <div class="scroll-picker" id="hrPicker">
+            <div class="picker-highlight"></div>
+            <div class="picker-track" id="hrTrack"></div>
+          </div>
+          <div class="tp-sep">:</div>
+          <div class="scroll-picker" id="minPicker">
+            <div class="picker-highlight"></div>
+            <div class="picker-track" id="minTrack"></div>
+          </div>
+          <div class="tp-unit">hr:min</div>
+        </div>
+      </div>
+
+      <div class="field full">
+        <div class="flabel">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg>
+          Breaks
+        </div>
+        <select class="sel" id="breaksSelect">
+          <option value="none">None</option>
+          <option value="short">Short — 5 min every 25 min</option>
+          <option value="regular" selected>Regular — 10 min every 30 min</option>
+          <option value="frequent">Frequent — 10 min every 20 min</option>
+        </select>
+      </div>
+
+      <div class="field full">
+        <div class="flabel">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+          Energy right now
+        </div>
+        <div class="level-sel">
+          <button class="lvl" data-level="haze" onclick="setLevel(this)"><span class="ln">Haze</span><span class="ld">Low</span></button>
+          <button class="lvl active" data-level="steady" onclick="setLevel(this)"><span class="ln">Steady</span><span class="ld">Moderate</span></button>
+          <button class="lvl" data-level="clear" onclick="setLevel(this)"><span class="ln">Clear</span><span class="ld">Focused</span></button>
+          <button class="lvl" data-level="sharp" onclick="setLevel(this)"><span class="ln">Sharp</span><span class="ld">Full on</span></button>
+        </div>
+      </div>
+
+      <div class="field full">
+        <div class="flabel">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          Bodily considerations <span style="font-weight:400;color:var(--text3);letter-spacing:0;text-transform:none;margin-left:4px">optional</span>
+        </div>
+        <textarea class="inp" id="bodyInput" placeholder="e.g. limited grip in right hand, back pain, can't kneel today"></textarea>
+      </div>
+
+      <div class="field full">
+        <div class="flabel">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Not today <span style="font-weight:400;color:var(--text3);letter-spacing:0;text-transform:none;margin-left:4px">optional</span>
+        </div>
+        <textarea class="inp" id="nogoInput" placeholder="e.g. no heavy lifting, skip the floor, not the wardrobe"></textarea>
+      </div>
+
+      <div class="field full">
+        <div class="flabel">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+          Task view
+        </div>
+        <div class="mtoggle">
+          <button class="mbtn active" id="modeList" onclick="setMode('list')">All visible</button>
+          <button class="mbtn" id="modeOne" onclick="setMode('one')">One at a time</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<button class="btn btn-gold btn-full" id="genBtn" onclick="generate()" disabled>
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/></svg>
+  <span id="genLabel">Untangle this</span>
+</button>
+
+<div class="err" id="errMsg"></div>
+<div id="resultsArea"></div>
+```
+
+  </div>
+
+  <!-- Later -->
+
+  <div class="section" id="section-later">
+    <div id="laterArea"></div>
+  </div>
+
+</div>
+
+<!-- Bottom Nav -->
+
+<nav class="bnav">
+  <button class="ni active" data-section="arriving">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+    Arriving
+  </button>
+  <button class="ni" data-section="untangle">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+    Untangle
+  </button>
+  <button class="ni" data-section="later">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+    Later
+    <div class="nbadge" id="laterBadge"></div>
+  </button>
+</nav>
+
+<!-- Settings Modal -->
+
+<div class="modal-ov" id="modalOv" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="mhd">
+      <div class="mtitle">Settings</div>
+      <button class="icon-btn" onclick="closeModal()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="field" style="margin-bottom:16px">
+      <div class="flabel">Anthropic API Key</div>
+      <input type="password" class="inp" id="apiKeyModal" placeholder="sk-ant-..." autocomplete="off" />
+      <div class="notice">Stored locally in your browser. Never sent anywhere except Anthropic's API.</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-gold" onclick="saveApiKeyModal()">Save</button>
+      <button class="btn btn-ghost" onclick="clearApiKey()">Clear</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Data ──────────────────────────────────────────────
+const STATES=[
+  {id:'scattered',name:'Scattered',desc:'Mind everywhere, hard to land',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>'},
+  {id:'heavy',name:'Heavy',desc:'Low energy, things feel like a lot',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>'},
+  {id:'okay',name:'Okay',desc:'Baseline — nothing special either way',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>'},
+  {id:'motivated',name:'Motivated',desc:'Ready to get into something',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>'},
+  {id:'wired',name:'Wired',desc:'Lots of energy, hard to direct',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/></svg>'},
+];
+const S_INF={scattered:'Scattered — one area max, 3 tasks total, extremely simple.',heavy:'Heavy — max 4 tasks, gentle language, small wins only.',okay:'Okay — standard warm breakdown.',motivated:'Motivated — full plan, multiple areas.',wired:'Wired — sprint sequence, very clear ordering.'};
+const S2L={scattered:'haze',heavy:'haze',okay:'steady',motivated:'clear',wired:'sharp'};
+
+// ── App state ──────────────────────────────────────────
+let apiKey=localStorage.getItem('ut_k')||'';
+let currentState=localStorage.getItem('ut_s')||null;
+let stateDate=localStorage.getItem('ut_sd')||null;
+let images=[],level='steady',mode='list',tasks=[],deferred=JSON.parse(localStorage.getItem('ut_d')||'[]');
+let hrVal=0,minVal=30;
+
+// ── Init ──────────────────────────────────────────────
+(()=>{const ua=navigator.userAgent;if(/Claude|FBAN|FBAV|Instagram|Line|MicroMessenger/.test(ua)||(ua.includes('Mobile')&&!ua.includes('Safari')&&!ua.includes('Chrome')&&!ua.includes('Firefox')))document.getElementById('bw').style.display='block';})();
+if(apiKey)document.getElementById('apiBanner').classList.add('hidden');
+buildPickers();renderCheckin();renderLater();updateBadge();checkReady();
+
+// ── Settings ──────────────────────────────────────────
+document.getElementById('settingsBtn').onclick=()=>{document.getElementById('apiKeyModal').value=apiKey;document.getElementById('modalOv').classList.add('open');};
+function closeModal(){document.getElementById('modalOv').classList.remove('open');}
+function saveApiKey(){const v=document.getElementById('apiKeyInline').value.trim();if(!v)return;apiKey=v;localStorage.setItem('ut_k',v);document.getElementById('apiBanner').classList.add('hidden');checkReady();}
+function saveApiKeyModal(){const v=document.getElementById('apiKeyModal').value.trim();if(!v)return;apiKey=v;localStorage.setItem('ut_k',v);document.getElementById('apiBanner').classList.add('hidden');checkReady();closeModal();}
+function clearApiKey(){apiKey='';localStorage.removeItem('ut_k');document.getElementById('apiBanner').classList.remove('hidden');checkReady();closeModal();}
+
+// ── Nav ───────────────────────────────────────────────
+document.querySelectorAll('.ni').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.ni').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  document.getElementById('section-'+b.dataset.section).classList.add('active');
+}));
+
+// ── Time Pickers ──────────────────────────────────────
+function buildPickers(){
+  buildPicker('hrPicker','hrTrack',Array.from({length:13},(_,i)=>i),hrVal,v=>{hrVal=v;});
+  const mins=[0,5,10,15,20,25,30,35,40,45,50,55];
+  buildPicker('minPicker','minTrack',mins,30,v=>{minVal=v;});
+}
+
+function buildPicker(pickerId,trackId,values,defaultVal,onChange){
+  const picker=document.getElementById(pickerId);
+  const track=document.getElementById(trackId);
+  const itemH=36;
+  let selIdx=values.indexOf(defaultVal);
+  if(selIdx<0)selIdx=0;
+
+  function render(){
+    // Pad with 2 items top and bottom so selection can center
+    const padded=['',''].concat(values).concat(['','']);
+    track.innerHTML=padded.map((v,i)=>{
+      const isSelected=i-2===selIdx;
+      return `<div class="picker-item${isSelected?' selected':''}">${v===''?'':String(v).padStart(2,'0')}</div>`;
+    }).join('');
+    track.style.transform=`translateY(${-selIdx*itemH}px)`;
+  }
+
+  function select(idx){
+    selIdx=Math.max(0,Math.min(values.length-1,idx));
+    render();
+    onChange(values[selIdx]);
+  }
+
+  render();
+
+  // Touch/mouse drag
+  let startY=0,startIdx=0,dragging=false;
+
+  function onStart(e){dragging=true;startY=e.touches?e.touches[0].clientY:e.clientY;startIdx=selIdx;}
+  function onMove(e){
+    if(!dragging)return;
+    e.preventDefault();
+    const y=e.touches?e.touches[0].clientY:e.clientY;
+    const delta=Math.round((startY-y)/itemH);
+    select(startIdx+delta);
+  }
+  function onEnd(){dragging=false;}
+
+  picker.addEventListener('touchstart',onStart,{passive:true});
+  picker.addEventListener('touchmove',onMove,{passive:false});
+  picker.addEventListener('touchend',onEnd);
+  picker.addEventListener('mousedown',onStart);
+  window.addEventListener('mousemove',onMove);
+  window.addEventListener('mouseup',onEnd);
+
+  // Click up/down on halves
+  picker.addEventListener('click',e=>{
+    const rect=picker.getBoundingClientRect();
+    const y=e.clientY-rect.top;
+    if(y<rect.height/2)select(selIdx-1);
+    else select(selIdx+1);
+  });
+}
+
+// ── Check-in ──────────────────────────────────────────
+function renderCheckin(){
+  const w=document.getElementById('checkinMain');
+  const today=new Date().toDateString();
+  const has=stateDate===today&&currentState;
+  if(has){
+    const s=STATES.find(x=>x.id===currentState);
+    w.innerHTML=`
+      <div class="ret-card">
+        <div class="ret-body">
+          <div class="ret-label">Arriving as <em>${s.name}</em></div>
+          <div class="ret-sub">${s.desc}</div>
+          <button class="update-link" onclick="showSup()">Update</button>
+        </div>
+        <div class="ret-pill">${s.name}</div>
+      </div>
+      <div class="sup-wrap" id="supWrap">${buildGrid()}<button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:10px" onclick="hideSup()">Keep current</button></div>
+      <div class="info-card">Your state shapes how Untangle reads your space and phrases your tasks today.<br><br>Head to <strong>Untangle</strong> in the navigation below when you're ready.</div>`;
+  } else {
+    const h=new Date().getHours();
+    const gr=h<12?'Good morning.':h<17?'Good afternoon.':'Good evening.';
+    w.innerHTML=`
+      <div class="ci-h">
+        <div class="ci-title">${gr}<br><em>How are you arriving?</em></div>
+        <div class="ci-sub" style="margin-top:8px">This shapes how Untangle works with you — no right answer.</div>
+      </div>
+      ${buildGrid()}`;
+  }
+}
+function buildGrid(){return `<div class="state-grid">${STATES.map(s=>`<button class="sc${currentState===s.id?' active':''}" onclick="selectState('${s.id}')"><div class="si">${s.icon}</div><span class="sn">${s.name}</span><span class="sd">${s.desc}</span></button>`).join('')}</div>`;}
+function selectState(id){currentState=id;const t=new Date().toDateString();stateDate=t;localStorage.setItem('ut_s',id);localStorage.setItem('ut_sd',t);const m=S2L[id];if(m){level=m;document.querySelectorAll('.lvl').forEach(b=>b.classList.toggle('active',b.dataset.level===m));}renderCheckin();}
+function showSup(){document.getElementById('supWrap').classList.add('open');}
+function hideSup(){document.getElementById('supWrap').classList.remove('open');}
+
+// ── Upload ────────────────────────────────────────────
+document.getElementById('fileInput').onchange=e=>addFiles(e.target.files);
+document.getElementById('cameraInput').onchange=e=>addFiles(e.target.files);
+function addFiles(files){Array.from(files).forEach(f=>{if(!f.type.startsWith('image/'))return;const r=new FileReader();r.onload=e=>{compress(e.target.result).then(c=>{images.push({src:c,id:Date.now()+Math.random()});renderPrev();checkReady();});};r.readAsDataURL(f);});}
+function removeImage(id){images=images.filter(i=>i.id!==id);renderPrev();checkReady();}
+function renderPrev(){
+  const z=document.getElementById('uploadZone');
+  const s=document.getElementById('prevStrip');
+  const r=document.getElementById('prevRow');
+  if(!images.length){z.style.display='';s.classList.remove('vis');return;}
+  z.style.display='none';s.classList.add('vis');
+  r.innerHTML=images.map(i=>`<div class="pthumb"><img src="${i.src}" alt=""><button class="prem" onclick="removeImage(${i.id})"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('')+`<button class="padd"><input type="file" accept="image/*" multiple onchange="addFiles(this.files)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add</button>`;
+}
+function compress(d,mw=700){return new Promise(res=>{const i=new Image();i.onload=()=>{const c=document.createElement('canvas');let w=i.width,h=i.height;if(w>mw){h=Math.round(h*mw/w);w=mw;}c.width=w;c.height=h;c.getContext('2d').drawImage(i,0,0,w,h);res(c.toDataURL('image/jpeg',0.6));};i.src=d;});}
+
+// ── Controls ──────────────────────────────────────────
+function setLevel(b){document.querySelectorAll('.lvl').forEach(x=>x.classList.remove('active'));b.classList.add('active');level=b.dataset.level;}
+function setMode(m){mode=m;document.getElementById('modeList').classList.toggle('active',m==='list');document.getElementById('modeOne').classList.toggle('active',m==='one');}
+function checkReady(){const b=document.getElementById('genBtn');if(b)b.disabled=!(images.length>0&&apiKey);}
+
+// ── Prompt ────────────────────────────────────────────
+function buildPrompt(){
+  const total=hrVal*60+minVal;
+  const brk={none:'no breaks',short:'5 min every 25 min',regular:'10 min every 30 min',frequent:'10 min every 20 min'}[document.getElementById('breaksSelect').value];
+  const ld={haze:'very low energy — 2–3 tasks max, big simple steps',steady:'moderate energy — clear manageable tasks',clear:'good focus — specific steps',sharp:'full bandwidth — detailed breakdown'}[level];
+  const body=document.getElementById('bodyInput').value.trim();
+  const nogo=document.getElementById('nogoInput').value.trim();
+  const sn=currentState?S_INF[currentState]:'';
+  return `You are a warm assistant helping someone tidy their physical space. They may have ADHD or executive function challenges. Be specific, kind, non-judgmental.
+
+Carefully study the image(s). Identify exactly what you see — specific objects, surfaces, zones. Be precise about what is actually visible.
+
+SESSION:
+- Time: ${total>0?total+' minutes':'open-ended'}
+- Breaks: ${brk}
+- Energy: ${level} — ${ld}
+${sn?'- State: '+sn:''}
+${body?'- Bodily considerations: '+body:''}
+${nogo?'- Never suggest: '+nogo:''}
+
+RULES:
+1. Group tasks by distinct visible area/surface. Name each area precisely from what you see.
+2. 2–5 tasks per area, quick wins first.
+3. Each task: specific action, optional brief note (why it helps), realistic minutes.
+4. Total time must fit within the session including breaks.
+5. End with one warm specific closing line.
+
+Respond ONLY with valid JSON, no markdown:
+{"spaceDescription":"2-3 sentences of exactly what you see","totalEstimatedMinutes":number,"areas":[{"name":"Specific area name","estimatedMinutes":number,"tasks":[{"text":"Action","note":"Why this helps or null","minutes":number}]}],"closing":"One warm closing line"}`;
+}
+
+// ── Generate ──────────────────────────────────────────
+async function generate(){
+  const btn=document.getElementById('genBtn');
+  const lbl=document.getElementById('genLabel');
+  const err=document.getElementById('errMsg');
+  btn.disabled=true;
+  lbl.innerHTML='<div class="spinner"></div> Reading your space…';
+  err.classList.remove('vis');
+  try{
+    const content=[...images.map(i=>({type:'image',source:{type:'base64',media_type:'image/jpeg',data:i.src.split(',')[1]}})),{type:'text',text:buildPrompt()}];
+    const ctrl=new AbortController();
+    const to=setTimeout(()=>ctrl.abort(),90000);
+    let res;
+    try{res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',signal:ctrl.signal,headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1500,messages:[{role:'user',content}]})});}
+    finally{clearTimeout(to);}
+    if(!res.ok){let m=`HTTP ${res.status}`;try{const e=await res.json();m+=': '+(e.error?.message||JSON.stringify(e));}catch(e){}throw new Error(m);}
+    const data=await res.json();
+    const raw=data.content.map(c=>c.text||'').join('');
+    const f=raw.indexOf('{'),l=raw.lastIndexOf('}');
+    if(f===-1||l===-1)throw new Error('Unexpected response: '+raw.substring(0,200));
+    renderResults(JSON.parse(raw.substring(f,l+1)));
+  }catch(e){
+    err.textContent=e.name==='AbortError'?'Request timed out. Try a smaller image or check your connection.':e.message;
+    err.classList.add('vis');
+  }finally{
+    btn.disabled=false;
+    lbl.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/></svg> Untangle this';
+    checkReady();
+  }
+}
+
+// ── Render results ────────────────────────────────────
+function renderResults(result){
+  tasks=[];
+  result.areas.forEach((a,ai)=>a.tasks.forEach((t,ti)=>tasks.push({...t,ai,areaName:a.name,id:`${ai}-${ti}`,done:false,deferred:false})));
+  const area=document.getElementById('resultsArea');
+  let html=`
+    <div class="space-desc-card">
+      <div class="space-desc-eyebrow">What I see</div>
+      <div class="space-desc-text">${result.spaceDescription}</div>
+    </div>
+    <div class="results-meta-row">
+      <div class="results-count">${tasks.length} tasks across ${result.areas.length} area${result.areas.length>1?'s':''}</div>
+      <div class="results-pill">${result.totalEstimatedMinutes} min</div>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="pf" style="width:0%"></div></div>
+    <div class="tiles">`;
+
+  result.areas.forEach((a,ai)=>{
+    const at=tasks.filter(t=>t.ai===ai);
+    if(mode==='list'){
+      html+=`<div class="tile" id="tile-${ai}">
+        <div class="tile-hd" onclick="toggleTile(${ai})">
+          <div class="tile-num">${ai+1}</div>
+          <div class="tile-info"><div class="tile-name">${a.name}</div><div class="tile-sub">${at.length} tasks · ${a.estimatedMinutes} min</div></div>
+          <div class="tile-right"><span class="tile-prog" id="tp-${ai}"></span><svg class="tile-chev" id="tc-${ai}" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6,9 12,15 18,9"/></svg></div>
+        </div>
+        <div class="tile-body" id="tb-${ai}">${at.map(t=>`
+          <div class="trow" id="tr-${t.id}" onclick="toggleTask('${t.id}')">
+            <div class="tcb" id="cb-${t.id}"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="20,6 9,17 4,12"/></svg></div>
+            <div class="tbody"><div class="tt">${t.text}</div>${t.note?`<div class="tn">${t.note}</div>`:''}</div>
+            <div class="tright"><div class="tm">${t.minutes} min</div><button class="db" onclick="event.stopPropagation();deferTask('${t.id}')">Later</button></div>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    } else {
+      html+=`<div class="tile" id="tile-${ai}">
+        <div class="tile-hd" onclick="toggleTile(${ai})">
+          <div class="tile-num">${ai+1}</div>
+          <div class="tile-info"><div class="tile-name">${a.name}</div><div class="tile-sub">${at.length} tasks · ${a.estimatedMinutes} min</div></div>
+          <div class="tile-right"><span class="tile-prog" id="tp-${ai}"></span><svg class="tile-chev" id="tc-${ai}" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6,9 12,15 18,9"/></svg></div>
+        </div>
+        <div class="tile-body" id="tb-${ai}"><div class="single-w" id="sw-${ai}"></div></div>
+      </div>`;
+    }
+  });
+
+  html+=`</div><div class="closing">${result.closing}</div><button class="ns-btn" onclick="resetSession()">Start a new session</button>`;
+  area.innerHTML=html;
+  if(mode==='one')result.areas.forEach((_,ai)=>renderSingle(ai));
+  area.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function toggleTile(ai){const b=document.getElementById('tb-'+ai);const c=document.getElementById('tc-'+ai);const o=b.classList.toggle('open');c.classList.toggle('open',o);}
+function renderSingle(ai){
+  const w=document.getElementById('sw-'+ai);if(!w)return;
+  const p=tasks.filter(t=>t.ai===ai&&!t.done&&!t.deferred);
+  if(!p.length){w.innerHTML=`<div style="padding:16px 20px;font-size:13px;color:var(--text2);font-style:italic">All tasks here are done or deferred.</div>`;return;}
+  const t=p[0];
+  w.innerHTML=`<div class="slabel">Up next</div><div class="stxt">${t.text}</div>${t.note?`<div class="snote">${t.note}</div>`:''}<div class="stime">~ ${t.minutes} min</div><div class="sbtns"><button class="slater" onclick="deferTask('${t.id}')">Later</button><button class="sdone" onclick="markDone('${t.id}',${t.ai})">Done</button></div>`;
+}
+function toggleTask(id){const t=tasks.find(x=>x.id===id);if(!t)return;t.done=!t.done;document.getElementById('tr-'+id)?.classList.toggle('done',t.done);updProg();chkArea(parseInt(id.split('-')[0]));}
+function markDone(id,ai){const t=tasks.find(x=>x.id===id);if(!t)return;t.done=true;updProg();renderSingle(ai);chkArea(ai);}
+function updProg(){const d=tasks.filter(t=>t.done||t.deferred).length;const f=document.getElementById('pf');if(f)f.style.width=(d/tasks.length*100)+'%';}
+function chkArea(ai){const at=tasks.filter(t=>t.ai===ai);const dc=at.filter(t=>t.done||t.deferred).length;const el=document.getElementById('tp-'+ai);if(el)el.textContent=dc>0?`${dc}/${at.length}`:'';document.getElementById('tile-'+ai)?.classList.toggle('done-all',dc===at.length);}
+function deferTask(id){
+  const t=tasks.find(x=>x.id===id);if(!t)return;t.deferred=true;
+  deferred.unshift({id:'d-'+Date.now(),text:t.text,note:t.note,minutes:t.minutes,area:t.areaName,level,date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'})});
+  localStorage.setItem('ut_d',JSON.stringify(deferred));
+  const row=document.getElementById('tr-'+id);
+  if(row){row.style.opacity='0';row.style.transition='opacity 0.3s';setTimeout(()=>row.style.display='none',300);}
+  const ai=parseInt(id.split('-')[0]);
+  if(mode==='one')renderSingle(ai);
+  updProg();chkArea(ai);updateBadge();renderLater();
+}
+function updateBadge(){document.getElementById('laterBadge')?.classList.toggle('show',deferred.length>0);}
+function renderLater(){
+  const a=document.getElementById('laterArea');if(!a)return;
+  if(!deferred.length){a.innerHTML=`<div class="later-empty"><div class="le-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg></div><div class="le-h">Nothing waiting yet</div><p class="le-p">Deferred tasks from your sessions land here — ready when the energy matches.</p></div>`;return;}
+  a.innerHTML=`<div style="margin-bottom:22px"><div style="font-family:'Montserrat',sans-serif;font-size:22px;font-weight:300;color:var(--text);margin-bottom:5px">Tasks for <em style="font-style:italic;color:var(--sage)">later</em></div><div style="font-size:13px;color:var(--text2)">Pick these up when the time and energy is right.</div></div>${deferred.map(d=>`<div class="defer-item"><div class="di-c"><div class="di-t">${d.text}</div>${d.note?`<div class="di-n">${d.note}</div>`:''}<div class="di-m"><span><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>${d.area}</span><span><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>${d.minutes} min</span><span>Best at: ${d.level}</span><span>${d.date}</span></div></div><div class="di-a"><button class="di-done" onclick="removeDeferred('${d.id}')">Done</button><button class="di-rm" onclick="removeDeferred('${d.id}')">Remove</button></div></div>`).join('')}`;
+}
+function removeDeferred(id){deferred=deferred.filter(d=>d.id!==id);localStorage.setItem('ut_d',JSON.stringify(deferred));updateBadge();renderLater();}
+function resetSession(){document.getElementById('resultsArea').innerHTML='';images=[];renderPrev();checkReady();document.getElementById('bodyInput').value='';document.getElementById('nogoInput').value='';tasks=[];window.scrollTo({top:0,behavior:'smooth'});}
+</script>
+
+</body>
+</html>
